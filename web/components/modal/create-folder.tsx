@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X, FolderPlus, Check } from 'lucide-react'
+import { X, FolderPlus, Check, Loader2 } from 'lucide-react'
+import { createFolder } from '@/lib/db'
 
 interface CreateFolderModalProps {
   open: boolean
@@ -13,16 +14,23 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [description, setDescription] = useState('')
+  const [busy, setBusy] = useState(false)
 
   if (!open) return null
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!title) return
-    setTitle('')
-    setDate(new Date().toISOString().split('T')[0])
-    setDescription('')
-    onCreate?.()
-    onClose()
+    setBusy(true)
+    try {
+      await createFolder(title, date, description)
+      setTitle('')
+      setDate(new Date().toISOString().split('T')[0])
+      setDescription('')
+      onCreate?.()
+      onClose()
+    } finally {
+      setBusy(false)
+    }
   }
 
   const handleCancel = () => {
@@ -88,11 +96,15 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
           <button onClick={handleCancel} className="btn-inverted text-sm">Cancel</button>
           <button
             onClick={handleCreate}
-            disabled={!title}
+            disabled={!title || busy}
             className="btn-primary text-sm disabled:opacity-40"
           >
-            <Check className="h-4 w-4" />
-            Create Folder
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            {busy ? 'Creating...' : 'Create Folder'}
           </button>
         </div>
       </div>

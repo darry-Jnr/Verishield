@@ -1,24 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, X, Image, Film, FileText, Shield, Check } from 'lucide-react'
+import { Upload, X, Image, Film, FileText, Shield, Check, Loader2 } from 'lucide-react'
+import { uploadFiles } from '@/lib/db'
 
 interface UploadModalProps {
   open: boolean
   onClose: () => void
-  onRegister?: () => void
+  onUpload?: () => void
+  folderId?: number
 }
 
 const fileIcons: Record<string, typeof Image> = {
-  'image': Image,
-  'video': Film,
-  'application': FileText,
+  image: Image,
+  video: Film,
+  application: FileText,
 }
 
-export default function UploadModal({ open, onClose, onRegister }: UploadModalProps) {
+export default function UploadModal({ open, onClose, onUpload, folderId }: UploadModalProps) {
   const [step, setStep] = useState<'files' | 'details' | 'review'>('files')
   const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
+  const [busy, setBusy] = useState(false)
 
   const [form, setForm] = useState({
     productName: '',
@@ -45,12 +48,29 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
-  const handleRegister = () => {
-    setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
-    setFiles([])
-    setStep('files')
-    onRegister?.()
-    onClose()
+  const handleRegister = async () => {
+    if (!folderId || files.length === 0) return
+    setBusy(true)
+    try {
+      await uploadFiles(
+        folderId,
+        files.map((f) => ({
+          file: f,
+          name: f.name,
+          type: f.type,
+          size: (f.size / 1024 / 1024).toFixed(2) + ' MB',
+        })),
+      )
+      setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
+      setFiles([])
+      setStep('files')
+      onUpload?.()
+      onClose()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setBusy(false)
+    }
   }
 
   const reset = () => {
@@ -63,7 +83,6 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="surface w-full max-w-xl rounded-2xl border border-subtle shadow-2xl overflow-hidden">
-        {/* Steps indicator */}
         <div className="flex items-center gap-1.5 border-b border-subtle px-6 pt-4 pb-3">
           {(['files', 'details', 'review'] as const).map((s, i) => (
             <div key={s} className="flex items-center gap-1.5">
@@ -81,7 +100,6 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
         </div>
 
         <div className="p-6 sm:p-8">
-          {/* Step 1: Upload files */}
           {step === 'files' && (
             <>
               <div className="mb-6 flex items-center justify-between">
@@ -154,7 +172,6 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
             </>
           )}
 
-          {/* Step 2: Details */}
           {step === 'details' && (
             <>
               <div className="mb-6 flex items-center justify-between">
@@ -242,7 +259,6 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
             </>
           )}
 
-          {/* Step 3: Review */}
           {step === 'review' && (
             <>
               <div className="mb-6 flex items-center justify-between">
@@ -299,9 +315,13 @@ export default function UploadModal({ open, onClose, onRegister }: UploadModalPr
 
               <div className="mt-8 flex items-center justify-between">
                 <button onClick={() => setStep('details')} className="btn-inverted text-sm">Back</button>
-                <button onClick={handleRegister} className="btn-primary text-sm">
-                  <Check className="h-4 w-4" />
-                  Register Asset
+                <button onClick={handleRegister} disabled={busy} className="btn-primary text-sm disabled:opacity-40">
+                  {busy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Check className="h-4 w-4" />
+                  )}
+                  {busy ? 'Registering...' : 'Register Asset'}
                 </button>
               </div>
             </>
