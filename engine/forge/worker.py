@@ -3,8 +3,9 @@ import uuid
 import logging
 import tempfile
 import os
+import traceback
 
-from config import SUPABASE_URL, SUPABASE_ANON_KEY, POLL_INTERVAL, TRACKING_ID_PREFIX
+from config import SUPABASE_URL, SUPABASE_ANON_KEY, POLL_INTERVAL, TRACKING_ID_PREFIX, STORAGE_BUCKET
 from db import get_client, get_processing_files, mark_as_secured, mark_as_failed
 from forge.stampers import image, media
 
@@ -64,6 +65,7 @@ def process_file(client, file_record: dict) -> None:
         return
 
     tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}")
+    logger.info("Downloading from URL: %s", file_url)
     try:
         download_file(client, file_url, tmp_original)
         tracking_id = f"{TRACKING_ID_PREFIX}-{uuid.uuid4().hex[:8].upper()}"
@@ -72,7 +74,7 @@ def process_file(client, file_record: dict) -> None:
         mark_as_secured(client, file_id, tracking_id)
         logger.info("Secured file %s with tracking_id=%s", file_id, tracking_id)
     except Exception as e:
-        logger.error("Failed to process file %s: %s", file_id, e)
+        logger.error("Failed to process file %s:\n%s", file_id, traceback.format_exc())
         mark_as_failed(client, file_id)
     finally:
         for p in (tmp_original,):
