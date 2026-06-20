@@ -23,7 +23,13 @@ def stamp(file_path: str, tracking_id: str) -> str:
 
     exif_bytes = piexif.dump(exif_dict)
 
-    out_path = os.path.join(tempfile.gettempdir(), f"stamped_{os.path.basename(file_path)}")
+    ext_map = {'JPEG': '.jpg', 'PNG': '.png', 'WEBP': '.webp', 'TIFF': '.tiff', 'GIF': '.gif'}
+    img_format = img.format or 'PNG'
+    ext = ext_map.get(img_format, '.png')
+
+    base = os.path.basename(file_path)
+    name_no_ext = os.path.splitext(base)[0]
+    out_path = os.path.join(tempfile.gettempdir(), f"stamped_{name_no_ext}{ext}")
     img.save(out_path, exif=exif_bytes)
     img.close()
 
