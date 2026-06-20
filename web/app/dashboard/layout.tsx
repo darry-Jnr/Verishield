@@ -1,29 +1,42 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, LayoutDashboard, FolderKanban, ScanEye, Bell, Settings, LogOut, Menu, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 const nav = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: FolderKanban, label: 'Assets', href: '/dashboard/assets' },
-  { icon: ScanEye, label: 'Monitor', href: '/dashboard/monitor' },
   { icon: Bell, label: 'Alerts', href: '/dashboard/alerts' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserEmail(data.user?.email ?? null)
+    })
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+  }
 
   return (
-    <div className="flex min-h-screen bg-canvas">
+    <div className="min-h-screen bg-canvas lg:flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-subtle bg-surface transition-transform duration-200 lg:static lg:translate-x-0 ${
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-subtle bg-surface transition-transform duration-200 lg:sticky lg:top-0 lg:translate-x-0 lg:h-screen ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex items-center justify-between border-b border-subtle px-5 py-4">
@@ -53,13 +66,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-t border-subtle px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">
-              JD
+              {userEmail ? userEmail[0].toUpperCase() : 'G'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-primary truncate text-xs font-medium">Jane Doe</p>
-              <p className="text-muted truncate text-[11px]">Acme Brands Inc.</p>
+              <p className="text-primary truncate text-xs font-medium">{userEmail ?? 'Guest'}</p>
+              <p className="text-muted truncate text-[11px]">{userEmail ? 'Signed in' : 'Not signed in'}</p>
             </div>
-            <LogOut className="h-4 w-4 shrink-0 text-muted hover:text-primary cursor-pointer transition-colors" />
+            {userEmail && (
+              <button onClick={handleSignOut} className="text-muted hover:text-primary cursor-pointer transition-colors">
+                <LogOut className="h-4 w-4 shrink-0" />
+              </button>
+            )}
           </div>
         </div>
       </aside>

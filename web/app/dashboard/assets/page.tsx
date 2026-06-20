@@ -1,16 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Upload, Image, Film, FileText, LayoutGrid, List, MoreHorizontal, ChevronDown, ArrowUpDown } from 'lucide-react'
-
-const assets = [
-  { name: 'Summer Collection — Hero Shot', type: 'image', date: '2026-06-18', matches: 4, status: 'active', thumb: 'from-rose-500/20 to-orange-500/20' },
-  { name: 'Product Video — 30s Ad', type: 'video', date: '2026-06-17', matches: 2, status: 'active', thumb: 'from-blue-500/20 to-cyan-500/20' },
-  { name: 'Lookbook Page 1-5', type: 'document', date: '2026-06-15', matches: 0, status: 'active', thumb: 'from-violet-500/20 to-purple-500/20' },
-  { name: 'Holiday Campaign — Banner', type: 'image', date: '2026-06-12', matches: 6, status: 'active', thumb: 'from-emerald-500/20 to-teal-500/20' },
-  { name: 'Influencer Collateral Pack', type: 'image', date: '2026-06-10', matches: 1, status: 'active', thumb: 'from-amber-500/20 to-yellow-500/20' },
-  { name: 'Spring Line — Detail Shots', type: 'image', date: '2026-06-08', matches: 3, status: 'archived', thumb: 'from-pink-500/20 to-red-500/20' },
-]
+import Link from 'next/link'
+import { Image, Film, FileText, LayoutGrid, List, ChevronDown, ArrowUpDown, FolderPlus } from 'lucide-react'
+import CreateFolderModal from '@/components/modal/create-folder'
+import { assets } from '@/lib/assets-data'
 
 const typeIcon = { image: Image, video: Film, document: FileText }
 
@@ -22,6 +16,7 @@ export default function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Archived'>('All')
   const [sort, setSort] = useState<'Recent' | 'Oldest' | 'Most Matches'>('Recent')
   const [yearFilter, setYearFilter] = useState('All')
+  const [showCreate, setShowCreate] = useState(false)
 
   const filtered = useMemo(() => {
     let result = [...assets]
@@ -51,9 +46,9 @@ export default function AssetsPage() {
           <h1 className="text-primary text-xl sm:text-2xl font-medium">Assets</h1>
           <p className="text-secondary mt-1 text-sm">Your registered product media.</p>
         </div>
-        <button className="btn-primary self-start text-sm">
-          <Upload className="h-4 w-4" />
-          Upload Asset
+        <button onClick={() => setShowCreate(true)} className="btn-primary self-start text-sm">
+          <FolderPlus className="h-4 w-4" />
+          Create Folder
         </button>
       </div>
 
@@ -135,7 +130,7 @@ export default function AssetsPage() {
           {filtered.map((a) => {
             const Icon = typeIcon[a.type as keyof typeof typeIcon]
             return (
-              <div key={a.name} className="surface group rounded-xl border border-subtle overflow-hidden transition-colors hover:border-zinc-700">
+              <Link key={a.id} href={`/dashboard/assets/${a.id}`} className="surface group rounded-xl border border-subtle overflow-hidden transition-colors hover:border-zinc-700 block">
                 <div className={`flex aspect-[4/3] items-center justify-center bg-gradient-to-br ${a.thumb}`}>
                   <div className="elevated flex h-12 w-12 items-center justify-center rounded-xl opacity-80">
                     <Icon className="h-6 w-6 text-primary" />
@@ -153,12 +148,12 @@ export default function AssetsPage() {
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-muted text-xs">{a.date}</span>
-                    <button className="text-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-all">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                    <span className="flex items-center gap-1 text-muted text-xs opacity-0 group-hover:opacity-100 transition-all">
+                      {a.files.length} files <ChevronDown className="h-3 w-3 -rotate-90" />
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             )
           })}
         </div>
@@ -171,7 +166,7 @@ export default function AssetsPage() {
             {filtered.map((a) => {
               const Icon = typeIcon[a.type as keyof typeof typeIcon]
               return (
-                <div key={a.name} className="surface rounded-xl border border-subtle p-4">
+                <Link key={a.id} href={`/dashboard/assets/${a.id}`} className="surface rounded-xl border border-subtle p-4 block hover:border-zinc-700 transition-colors">
                   <div className="flex items-start gap-3">
                     <div className="elevated flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                       <Icon className="h-4 w-4 text-secondary" />
@@ -186,7 +181,7 @@ export default function AssetsPage() {
                       a.status === 'active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-zinc-800'
                     }`}>{a.status}</span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
@@ -219,6 +214,8 @@ export default function AssetsPage() {
           </div>
         </>
       )}
+
+      <CreateFolderModal open={showCreate} onClose={() => setShowCreate(false)} />
     </div>
   )
 }
