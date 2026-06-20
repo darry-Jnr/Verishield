@@ -97,22 +97,23 @@ export async function uploadFiles(
     size: string
     thumb: string
     url: string
+    storage_path: string
     user_id: string
     status: string
   }[] = []
 
   for (const f of files) {
-    const path = `${folderId}/${Date.now()}-${f.file.name}`
+    const storage_path = `${folderId}/${Date.now()}-${f.file.name}`
 
     const { error: uploadError } = await supabase.storage
       .from('media')
-      .upload(path, f.file)
+      .upload(storage_path, f.file)
 
     if (uploadError) throw uploadError
 
     const { data: urlData } = supabase.storage
       .from('media')
-      .getPublicUrl(path)
+      .getPublicUrl(storage_path)
 
     records.push({
       folder_id: folderId,
@@ -121,6 +122,7 @@ export async function uploadFiles(
       size: f.size,
       thumb: fileThumbs[f.type.split('/')[0]] || 'from-zinc-500/30 to-zinc-600/30',
       url: urlData.publicUrl,
+      storage_path,
       user_id: userId,
       status: 'processing',
     })

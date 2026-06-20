@@ -26,56 +26,39 @@ def get_stamper(file_type: str):
     return None
 
 
-def download_file(client, url: str, dest: str) -> None:
-    if url.startswith("http"):
-        import requests
-        resp = requests.get(url, timeout=60)
-        resp.raise_for_status()
-        with open(dest, "wb") as f:
-            f.write(resp.content)
-    else:
-        bucket = client.storage.from_(STORAGE_BUCKET)
-        bucket_path = url.replace(f"{SUPABASE_URL}/storage/v1/object/public/media/", "")
-        with open(dest, "wb") as f:
-            resp = bucket.download(bucket_path)
-            f.write(resp)
-
-
-def upload_stamped(client, file_path: str, original_url: str) -> str:
-    bucket = client.storage.from_("media")
-    if original_url.startswith("http"):
-        path_in_bucket = "/".join(original_url.split("/")[-2:])
-    else:
-        path_in_bucket = original_url
-    with open(file_path, "rb") as f:
-        bucket.update(path_in_bucket, f)
-    return original_url
-
-
 def process_file(client, file_record: dict) -> None:
     file_id = file_record["id"]
     file_type = file_record.get("type", "")
-    file_url = file_record.get("url", "")
-    logger.info("Processing file %s (type=%s)", file_id, file_type)
+    storage_path = file_record.get("storage_path", "")
+    logger.info("Processing file %s (type=%s, path=%s)", file_id, file_type, storage_path)
 
     stamper = get_stamper(file_type)
     if stamper is None:
-        logger.warning("No stamper for type=%s, marking as failed", file_type)
-        mark_as_failed(client, file_id)
+        msg = f"No stamper for type={file_type}"
+        logger.warning(msg)
+        mark_as_failed(client, file_id, msg)
         return
 
     tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}")
-    logger.info("Downloading from URL: %s", file_url)
     try:
-        download_file(client, file_url, tmp_original)
+        logger.info("Downloading via Supabase client: media/%s", storage_path)
+        data = client.storage.from_(STORAGE_BUCKET).download(storage_path)
+        with open(tmp_original, "wb") as f:
+            f.write(data)
+
         tracking_id = f"{TRACKING_ID_PREFIX}-{uuid.uuid4().hex[:8].upper()}"
         stamped_path = stamper(tmp_original, tracking_id)
-        upload_stamped(client, stamped_path, file_url)
+        logger.info("Stamped to %s", stamped_path)
+
+        with open(stamped_path, "rb") as f:
+            client.storage.from_(STORAGE_BUCKET).update(storage_path, f)
+
         mark_as_secured(client, file_id, tracking_id)
         logger.info("Secured file %s with tracking_id=%s", file_id, tracking_id)
     except Exception as e:
-        logger.error("Failed to process file %s:\n%s", file_id, traceback.format_exc())
-        mark_as_failed(client, file_id)
+        err = traceback.format_exc()
+        logger.error("Failed to process file %s:\n%s", file_id, err)
+        mark_as_failed(client, file_id, err[:2000])
     finally:
         for p in (tmp_original,):
             if os.path.exists(p):

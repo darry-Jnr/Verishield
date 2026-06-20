@@ -13,7 +13,7 @@ def get_client() -> Client:
 def get_processing_files(client: Client) -> list[dict]:
     resp = (
         client.table("files")
-        .select("id, folder_id, name, type, url, user_id")
+        .select("id, folder_id, name, type, url, storage_path, user_id")
         .eq("status", "processing")
         .execute()
     )
@@ -26,8 +26,10 @@ def mark_as_secured(client: Client, file_id: int, tracking_id: str) -> None:
     ).eq("id", file_id).execute()
 
 
-def mark_as_failed(client: Client, file_id: int) -> None:
-    client.table("files").update({"status": "failed"}).eq("id", file_id).execute()
+def mark_as_failed(client: Client, file_id: int, error_log: str = "") -> None:
+    client.table("files").update(
+        {"status": "failed", "error_log": error_log}
+    ).eq("id", file_id).execute()
 
 
 def get_file_by_tracking_id(client: Client, tracking_id: str) -> dict | None:

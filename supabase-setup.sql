@@ -22,5 +22,7 @@ create policy "Owners can delete from media"
 
 -- Add columns to the files table
 alter table files add column if not exists url text;
+alter table files add column if not exists storage_path text;
 alter table files add column if not exists status text default 'processing';
 alter table files add column if not exists tracking_id text;
+alter table files add column if not exists error_log text;
