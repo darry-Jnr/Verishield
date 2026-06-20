@@ -39,7 +39,8 @@ def process_file(client, file_record: dict) -> None:
         mark_as_failed(client, file_id, msg)
         return
 
-    tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}")
+    _, ext = os.path.splitext(file_record.get("name", ""))
+    tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}{ext}")
     try:
         logger.info("Downloading via Supabase client: media/%s", storage_path)
         data = client.storage.from_(STORAGE_BUCKET).download(storage_path)
