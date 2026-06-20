@@ -151,12 +151,9 @@ export default function AssetsPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((f) => (
             <Link key={f.id} href={`/dashboard/assets/${f.id}`} className="surface group rounded-xl border border-subtle overflow-hidden transition-colors hover:border-zinc-700 block">
-              <div className={`flex aspect-[4/3] items-center justify-center bg-gradient-to-br ${f.thumb}`}>
-                <div className="elevated flex h-12 w-12 items-center justify-center rounded-xl opacity-80">
-                  <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-                  </svg>
-                </div>
+              <div className="relative aspect-[4/3]">
+                <div className={`absolute bottom-0 left-0 right-0 h-[80%] rounded-b-xl rounded-tl-xl bg-gradient-to-br ${f.thumb} border-b border-l border-white/[4%]`} />
+                <div className={`absolute top-0 right-0 w-[44%] h-[34%] rounded-tr-xl rounded-bl-xl bg-gradient-to-br ${f.thumb} border-t border-r border-white/[4%] z-10`} />
               </div>
               <div className="p-3 sm:p-4">
                 <div className="flex items-start justify-between gap-2">
