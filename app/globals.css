@@ -1,0 +1,132 @@
+@import 'tailwindcss';
+@config '../tailwind.config.ts';
+
+/* ── Base Canvas ── */
+html {
+  background-color: #000000;
+  color: #EAEAEA;
+}
+
+body {
+  font-family: var(--font-geist-sans);
+  background-color: #000000;
+  color: #EAEAEA;
+}
+
+/* ── Data / Mono ── */
+code,
+pre,
+kbd,
+samp,
+[data-font-mono] {
+  font-family: var(--font-geist-mono);
+}
+
+/* ── Containers & Cards ── */
+.surface {
+  background-color: #111111;
+}
+
+.elevated {
+  background-color: #1A1A1A;
+}
+
+.border-subtle {
+  border-color: #333333;
+}
+
+.border-grid {
+  border-color: #444444;
+}
+
+/* ── Typography ── */
+.text-primary {
+  color: #FFFFFF;
+}
+
+.text-body {
+  color: #EAEAEA;
+}
+
+.text-secondary {
+  color: #888888;
+}
+
+.text-muted {
+  color: #666666;
+}
+
+/* ── Action Buttons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  color: #000000;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-inverted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #000000;
+  color: #FFFFFF;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #333333;
+  transition: background-color 0.15s ease;
+}
+
+.btn-inverted:hover {
+  background-color: #111111;
+}
+
+/* ── Threat Levels ── */
+.text-threat-critical {
+  color: #F87171;
+}
+
+.bg-threat-critical {
+  background-color: rgba(248, 113, 113, 0.1);
+}
+
+.border-threat-critical {
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.text-threat-warning {
+  color: #F97316;
+}
+
+.bg-threat-warning {
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.border-threat-warning {
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.text-threat-safe {
+  color: #10B981;
+}
+
+.bg-threat-safe {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.border-threat-safe {
+  border-color: rgba(16, 185, 129, 0.2);
+}
