@@ -20,6 +20,8 @@ export interface FileRecord {
   size: string
   thumb: string
   url: string
+  status: string
+  tracking_id: string | null
   created_at: string
 }
 
@@ -96,6 +98,7 @@ export async function uploadFiles(
     thumb: string
     url: string
     user_id: string
+    status: string
   }[] = []
 
   for (const f of files) {
@@ -119,6 +122,7 @@ export async function uploadFiles(
       thumb: fileThumbs[f.type.split('/')[0]] || 'from-zinc-500/30 to-zinc-600/30',
       url: urlData.publicUrl,
       user_id: userId,
+      status: 'processing',
     })
   }
 

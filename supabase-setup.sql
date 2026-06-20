@@ -20,5 +20,7 @@ create policy "Owners can delete from media"
   on storage.objects for delete
   using (bucket_id = 'media' and auth.uid() = owner);
 
--- Add url column to the files table
+-- Add columns to the files table
 alter table files add column if not exists url text;
+alter table files add column if not exists status text default 'processing';
+alter table files add column if not exists tracking_id text;
