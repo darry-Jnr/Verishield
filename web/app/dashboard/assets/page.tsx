@@ -1,38 +1,29 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { LayoutGrid, List, ChevronDown, ArrowUpDown, FolderPlus } from 'lucide-react'
 
 const stripExt = (n: string) => n.replace(/\.[^.]+$/, '')
 import CreateFolderModal from '@/components/modal/create-folder'
 import { getFolders, type Folder } from '@/lib/db'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 const statusPills = ['All', 'Active', 'Archived'] as const
 const sortOptions = ['Recent', 'Oldest'] as const
 
 export default function AssetsPage() {
+  const queryClient = useQueryClient()
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Archived'>('All')
   const [sort, setSort] = useState<'Recent' | 'Oldest'>('Recent')
   const [yearFilter, setYearFilter] = useState('All')
   const [showCreate, setShowCreate] = useState(false)
-  const [folders, setFolders] = useState<Folder[]>([])
-  const [loading, setLoading] = useState(true)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await getFolders()
-      setFolders(data)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => { load() }, [load])
+  const { data: folders = [], isLoading: loading } = useQuery({
+    queryKey: ['folders'],
+    queryFn: getFolders,
+  })
 
   const filtered = useMemo(() => {
     let result = [...folders]
@@ -254,7 +245,7 @@ export default function AssetsPage() {
       </>
       )}
 
-      <CreateFolderModal open={showCreate} onClose={() => setShowCreate(false)} onCreate={load} />
+      <CreateFolderModal open={showCreate} onClose={() => setShowCreate(false)} onCreate={() => queryClient.invalidateQueries({ queryKey: ['folders'] })} />
     </div>
   )
 }

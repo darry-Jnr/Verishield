@@ -1,20 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import Link from 'next/link'
-import { getScanResults, type ScanResult } from '@/lib/db'
+import { getScanResults } from '@/lib/db'
+import { useQuery } from '@tanstack/react-query'
 
 export default function ScanLogsPage() {
-  const [results, setResults] = useState<ScanResult[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    getScanResults()
-      .then(setResults)
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+  const { data: results = [], isLoading: loading } = useQuery({
+    queryKey: ['scan-results'],
+    queryFn: getScanResults,
+  })
 
   return (
     <div className="p-4 sm:p-8">
