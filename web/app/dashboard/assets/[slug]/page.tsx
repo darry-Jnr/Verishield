@@ -106,6 +106,19 @@ export default function AssetDetailPage() {
             <span className="text-muted/50">{files.length} file{files.length !== 1 ? 's' : ''}</span>
           </div>
 
+          {files.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800/80 border border-zinc-700/50 mb-5">
+                <Upload className="h-8 w-8 text-zinc-500" />
+              </div>
+              <h3 className="text-primary text-base font-medium mb-1.5">This folder is empty</h3>
+              <p className="text-muted text-sm mb-6 max-w-xs">Drop your product images, videos, or documents here to start tracking.</p>
+              <button onClick={() => setShowUpload(true)} className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-black transition-opacity hover:opacity-90">
+                <Upload className="h-4 w-4" />
+                Upload files
+              </button>
+            </div>
+          ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {files.map((f) => {
               const FileIcon = typeIcon[f.type as keyof typeof typeIcon] || FileText
@@ -140,6 +153,7 @@ export default function AssetDetailPage() {
               )
             })}
           </div>
+          )}
         </div>
       </div>
       <UploadModal open={showUpload} onClose={() => setShowUpload(false)} onUpload={loadFiles} folderId={folderId} />
