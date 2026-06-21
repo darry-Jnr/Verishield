@@ -1,3 +1,5 @@
+'use client'
+
 import { Shield } from 'lucide-react'
 
 interface NavbarProps {
@@ -14,12 +16,9 @@ export default function Navbar({ onSignIn }: NavbarProps) {
           </div>
           <span className="text-primary font-semibold tracking-tight">AuraGuard</span>
         </div>
-        <div className="relative">
-          <div className="absolute -inset-0.5 rounded-full bg-primary/20 blur-sm animate-pulse" />
-          <button onClick={onSignIn} className="relative rounded-full bg-primary px-5 py-2 text-sm font-medium text-white transition-all hover:bg-primary/90">
-            Get started
-          </button>
-        </div>
+        <button onClick={onSignIn} className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-white ring-1 ring-primary/50 transition-all hover:bg-primary/90 hover:ring-primary/80">
+          Get started
+        </button>
       </div>
     </nav>
   )
