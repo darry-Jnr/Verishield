@@ -54,8 +54,8 @@ export default function SystemPage() {
     } catch { results.push({ ok: false, timestamp: new Date().toISOString() }) }
 
     try {
-      const { data: buckets } = await supabase.storage.listBuckets()
-      results.push({ ok: !!buckets?.find((b) => b.name === 'media'), timestamp: new Date().toISOString() })
+      const { data, error } = await supabase.storage.from('media').list('', { limit: 1 })
+      results.push({ ok: !error && data !== null, timestamp: new Date().toISOString() })
     } catch { results.push({ ok: false, timestamp: new Date().toISOString() }) }
 
     try {
