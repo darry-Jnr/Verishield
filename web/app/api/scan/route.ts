@@ -3,10 +3,31 @@ import fs from 'fs'
 import path from 'path'
 import { NextResponse } from 'next/server'
 
+function findUp(start: string, relativePath: string): string | null {
+  let dir = start
+  while (dir !== '/') {
+    if (fs.existsSync(path.join(dir, relativePath))) return dir
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+  return null
+}
+
 export async function POST() {
   try {
-    const engineDir = path.resolve(process.cwd(), '../../engine')
-    const venvPython = path.resolve(process.cwd(), '../test-shop/.venv/bin/python3')
+    const cwd = process.cwd()
+
+    const repoRoot = findUp(cwd, 'engine/scraper/cli.py')
+    if (!repoRoot) {
+      return NextResponse.json(
+        { ok: false, error: 'Engine directory not found' },
+        { status: 500 }
+      )
+    }
+
+    const engineDir = path.join(repoRoot, 'engine')
+    const venvPython = path.join(repoRoot, 'test-shop/.venv/bin/python3')
     const pythonBin = fs.existsSync(venvPython) ? venvPython : 'python3'
 
     const result = execSync(
