@@ -4,20 +4,33 @@ interface NavbarProps {
   onSignIn: () => void
 }
 
+const links = ['Features', 'How it works', 'Pricing']
+
 export default function Navbar({ onSignIn }: NavbarProps) {
   return (
-    <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-      <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" />
-        <span className="text-primary font-medium">AuraGuard</span>
-      </div>
-      <div className="flex items-center gap-3">
-        <button onClick={onSignIn} className="btn-inverted text-sm">
-          Sign in
-        </button>
-        <button onClick={onSignIn} className="btn-primary text-sm">
-          Get started
-        </button>
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[4%] bg-black/60 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+            <Shield className="h-5 w-5 text-primary" />
+          </div>
+          <span className="text-primary font-semibold tracking-tight">AuraGuard</span>
+        </div>
+        <div className="hidden items-center gap-8 md:flex">
+          {links.map((l) => (
+            <a key={l} href="#" className="text-sm text-muted transition-colors hover:text-primary">
+              {l}
+            </a>
+          ))}
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={onSignIn} className="hidden rounded-lg px-4 py-2 text-sm text-muted transition-colors hover:text-primary sm:block">
+            Sign in
+          </button>
+          <button onClick={onSignIn} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-all hover:bg-primary/90">
+            Get started
+          </button>
+        </div>
       </div>
     </nav>
   )
