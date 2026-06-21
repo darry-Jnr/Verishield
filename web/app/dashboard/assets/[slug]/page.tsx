@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Image, Film, FileText, Download, Calendar, Building2, Folder, Upload } from 'lucide-react'
 import { getFolders, getFiles, type Folder as FolderRecord, type FileRecord } from '@/lib/db'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import UploadModal from '@/components/modal/upload'
 import FileDetailModal from '@/components/modal/file-detail'
 import VideoThumbnail from '@/components/video-thumbnail'
@@ -15,33 +16,23 @@ const typeIcon: Record<string, typeof Image> = { image: Image, video: Film, docu
 export default function AssetDetailPage() {
   const { slug } = useParams()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [showUpload, setShowUpload] = useState(false)
   const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null)
-  const [folder, setFolder] = useState<FolderRecord | null>(null)
-  const [files, setFiles] = useState<FileRecord[]>([])
   const folderId = Number(slug)
 
-  const loadFiles = useCallback(async () => {
-    if (isNaN(folderId)) return
-    try {
-      const data = await getFiles(folderId)
-      setFiles(data)
-    } catch (e) {
-      console.error(e)
-    }
-  }, [folderId])
+  const { data: folder } = useQuery({
+    queryKey: ['folders'],
+    queryFn: getFolders,
+    select: (all) => all.find((f) => f.id === folderId) || null,
+    enabled: !isNaN(folderId),
+  })
 
-  useEffect(() => {
-    if (isNaN(folderId)) return
-    Promise.all([
-      getFolders().then((all) => all.find((f) => f.id === folderId) || null),
-      getFiles(folderId),
-    ])
-      .then(([folderData, filesData]) => {
-        setFolder(folderData)
-        setFiles(filesData)
-      })
-  }, [folderId])
+  const { data: files = [] } = useQuery({
+    queryKey: ['files', folderId],
+    queryFn: () => getFiles(folderId),
+    enabled: !isNaN(folderId),
+  })
 
   if (isNaN(folderId)) {
     return (
@@ -142,14 +133,22 @@ export default function AssetDetailPage() {
           </div>
         </div>
       )}
-      <UploadModal open={showUpload} onClose={() => setShowUpload(false)} onUpload={loadFiles} folderId={folderId} />
+      <UploadModal open={showUpload} onClose={() => setShowUpload(false)} onUpload={() => {
+        queryClient.invalidateQueries({ queryKey: ['files', folderId] })
+        queryClient.invalidateQueries({ queryKey: ['file-stats'] })
+        queryClient.invalidateQueries({ queryKey: ['recent-files'] })
+      }} folderId={folderId} />
       <FileDetailModal
         open={!!selectedFile}
         file={selectedFile}
         files={files}
         onClose={() => setSelectedFile(null)}
-        onDeleted={loadFiles}
-        onRenamed={loadFiles}
+        onDeleted={() => {
+          queryClient.invalidateQueries({ queryKey: ['files', folderId] })
+          queryClient.invalidateQueries({ queryKey: ['file-stats'] })
+          queryClient.invalidateQueries({ queryKey: ['recent-files'] })
+        }}
+        onRenamed={() => queryClient.invalidateQueries({ queryKey: ['files', folderId] })}
         onNavigate={setSelectedFile}
       />
     </div>

@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { Upload, ArrowRight, Scan, Square, FolderKanban, Image, CheckCircle2, AlertTriangle, Search } from 'lucide-react'
 
 const stripExt = (n: string) => n.replace(/\.[^.]+$/, '')
 import Link from 'next/link'
 import { getFileStats, getFolders, getRecentFiles, getScanResults, type Folder, type FileRecord, type ScanResult } from '@/lib/db'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 const DEMO_DOMAINS = [
   'aliexpress.com',
@@ -36,37 +37,34 @@ function randomBlips(count: number, color: string) {
 }
 
 export default function DashboardPage() {
-  const [folders, setFolders] = useState<Folder[]>([])
-  const [stats, setStats] = useState({ total: 0, processing: 0, secured: 0, failed: 0, threatCount: 0 })
-  const [recentFiles, setRecentFiles] = useState<FileRecord[]>([])
+  const queryClient = useQueryClient()
   const [scanning, setScanning] = useState(false)
   const [scanLog, setScanLog] = useState<ScanLogEntry[]>([])
-  const [scanResults, setScanResults] = useState<ScanResult[]>([])
   const [scanMessage, setScanMessage] = useState('')
-  const [mounted, setMounted] = useState(false)
-  const [loading, setLoading] = useState(true)
   const abortRef = useRef(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  const { data: folders = [], isLoading: foldersLoading } = useQuery({
+    queryKey: ['folders'],
+    queryFn: getFolders,
+  })
 
-  const load = async () => {
-    try {
-      const [folderData, statsData, filesData] = await Promise.all([
-        getFolders(),
-        getFileStats(),
-        getRecentFiles(5),
-      ])
-      setFolders(folderData)
-      setStats(statsData)
-      setRecentFiles(filesData)
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data: stats = { total: 0, processing: 0, secured: 0, failed: 0, threatCount: 0 }, isLoading: statsLoading } = useQuery({
+    queryKey: ['file-stats'],
+    queryFn: getFileStats,
+    refetchInterval: 5000,
+  })
 
-  useEffect(() => { load() }, [])
+  const { data: recentFiles = [], isLoading: recentLoading } = useQuery({
+    queryKey: ['recent-files'],
+    queryFn: () => getRecentFiles(5),
+  })
+
+  const { data: scanResults = [] } = useQuery({
+    queryKey: ['scan-results'],
+    queryFn: getScanResults,
+  })
+
+  const loading = foldersLoading || statsLoading || recentLoading
 
   const startScan = async () => {
     if (scanning) return
@@ -79,7 +77,6 @@ export default function DashboardPage() {
     abortRef.current = false
     setScanning(true)
     setScanLog([])
-    setScanResults([])
     setScanMessage('')
 
     const log: ScanLogEntry[] = []
@@ -125,8 +122,10 @@ export default function DashboardPage() {
     })
     setScanLog([...log])
 
-    setScanResults(latestResults)
-    await load()
+    await queryClient.invalidateQueries({ queryKey: ['scan-results'] })
+    await queryClient.invalidateQueries({ queryKey: ['folders'] })
+    await queryClient.invalidateQueries({ queryKey: ['file-stats'] })
+    await queryClient.invalidateQueries({ queryKey: ['recent-files'] })
     setScanning(false)
   }
 
@@ -138,7 +137,7 @@ export default function DashboardPage() {
   const radarColor = stats.failed > 0 ? 'bg-red-500' : stats.processing > 0 ? 'bg-orange-500' : 'bg-emerald-500'
   const sweepColor = stats.failed > 0 ? 'from-red-500/40' : stats.processing > 0 ? 'from-orange-500/40' : 'from-emerald-500/40'
   const scanLabel = stats.failed > 0 ? 'Threats detected' : stats.processing > 0 ? 'Processing files' : 'All clear'
-  const lastScan = mounted ? new Date().toLocaleTimeString() : '...'
+  const lastScan = new Date().toLocaleTimeString()
 
   const noAssets = folders.length === 0 && stats.total === 0
 
