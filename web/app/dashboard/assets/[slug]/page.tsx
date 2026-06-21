@@ -142,9 +142,11 @@ export default function AssetDetailPage() {
       <FileDetailModal
         open={!!selectedFile}
         file={selectedFile}
+        files={files}
         onClose={() => setSelectedFile(null)}
         onDeleted={loadFiles}
         onRenamed={loadFiles}
+        onNavigate={setSelectedFile}
       />
     </div>
   )
