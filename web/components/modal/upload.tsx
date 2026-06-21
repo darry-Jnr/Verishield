@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Upload, X, Image, Film, FileText, Shield, Check, Loader2 } from 'lucide-react'
 import { uploadFiles } from '@/lib/db'
 
+const stripExt = (n: string) => n.replace(/\.[^.]+$/, '')
+
 interface UploadModalProps {
   open: boolean
   onClose: () => void
@@ -154,7 +156,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-primary text-sm truncate">{f.name}</p>
+                          <p className="text-primary text-sm truncate">{stripExt(f.name)}</p>
                           <p className="text-muted text-xs">{(f.size / 1024 / 1024).toFixed(2)} MB</p>
                         </div>
                         <button onClick={() => removeFile(i)} className="text-muted hover:text-primary shrink-0 opacity-0 group-hover/file:opacity-100 transition-all">
@@ -313,7 +315,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
                         ) : (
                           <FileText className="h-4 w-4" />
                         )}
-                        <span className="truncate">{f.name}</span>
+                        <span className="truncate">{stripExt(f.name)}</span>
                       </div>
                     ))}
                   </div>
