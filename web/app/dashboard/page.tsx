@@ -1,67 +1,87 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Upload, ArrowRight, Scan, Square } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Upload, ArrowRight, Scan, Square, FolderKanban, Image, CheckCircle2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
+import { getFileStats, getFolders, getRecentFiles, type Folder, type FileRecord } from '@/lib/db'
 
-const initialAlerts = [
-  { threat: 'Unauthorized Replica Detected', brand: 'luxewear.com', level: 'critical' as const, time: '2m ago' },
-  { threat: 'MAP Violation — 40% below MSRP', brand: 'shopmart.io', level: 'warning' as const, time: '15m ago' },
-  { threat: 'Status Clear — Enforcement Sent', brand: 'trendbay.net', level: 'safe' as const, time: '1h ago' },
-]
-
-const fakeFindings = [
-  { threat: 'Unauthorized Replica — 86% match on product images', brand: 'stylesphere.io', level: 'critical' as const },
-  { threat: 'MAP Violation — Listed 32% below MSRP', brand: 'quickcart.org', level: 'warning' as const },
-  { threat: 'Unauthorized Replica — Video stolen for ad campaign', brand: 'copybay.net', level: 'critical' as const },
-  { threat: 'MAP Violation — Price undercut by $24.00', brand: 'dealfinder.io', level: 'warning' as const },
-  { threat: 'Status Clear — DMCA takedown enforced', brand: 'luxewear.com', level: 'safe' as const },
-]
+function randomBlips(count: number, color: string) {
+  const positions = [
+    'top-1 left-1/3', 'top-1/4 right-2', 'top-1/2 left-1', 'bottom-1/3 right-1/4',
+    'bottom-1 left-1/2', 'top-2 right-1/3', 'left-1/2 bottom-2', 'right-1 top-1/3',
+    'top-1/3 left-2', 'bottom-2 right-1/2', 'right-2 bottom-1/3', 'left-1/3 top-1',
+  ]
+  const durations = ['1.2s', '1.8s', '2.2s', '1.5s', '2.5s', '1.0s', '2.0s', '1.6s']
+  const blips = []
+  for (let i = 0; i < Math.min(count, 8); i++) {
+    blips.push(
+      <span
+        key={`${color}-${i}`}
+        className={`absolute z-10 h-1.5 w-1.5 rounded-full ${color} animate-ping`}
+        style={{ top: `${15 + Math.random() * 70}%`, left: `${15 + Math.random() * 70}%`, animationDuration: durations[i % durations.length], animationDelay: `${i * 0.3}s` }}
+      />
+    )
+  }
+  return blips
+}
 
 export default function DashboardPage() {
-  const [alerts, setAlerts] = useState(initialAlerts)
-  const [threatCount, setThreatCount] = useState(3)
+  const [folders, setFolders] = useState<Folder[]>([])
+  const [stats, setStats] = useState({ total: 0, processing: 0, secured: 0, failed: 0, threatCount: 0 })
+  const [recentFiles, setRecentFiles] = useState<FileRecord[]>([])
   const [scanning, setScanning] = useState(false)
-  const [scanDone, setScanDone] = useState(false)
+  const [scanCount, setScanCount] = useState(0)
   const [mounted, setMounted] = useState(false)
-  const scanRef = useRef<number | null>(null)
-  const alertRef = useRef<number | null>(null)
-  const findingIndex = useRef(0)
+  const intervalRef = useRef<number | null>(null)
 
   useEffect(() => { setMounted(true) }, [])
+
+  const load = async () => {
+    try {
+      const [folderData, statsData, filesData] = await Promise.all([
+        getFolders(),
+        getFileStats(),
+        getRecentFiles(5),
+      ])
+      setFolders(folderData)
+      setStats(statsData)
+      setRecentFiles(filesData)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => { load() }, [])
 
   const startScan = () => {
     if (scanning) return
     setScanning(true)
-    setScanDone(false)
-    findingIndex.current = 0
-
-    alertRef.current = window.setInterval(() => {
-      if (findingIndex.current < fakeFindings.length) {
-        const f = fakeFindings[findingIndex.current]
-        setAlerts((prev) => [{ ...f, time: 'just now' }, ...prev])
-        setThreatCount((c) => c + 1)
-        findingIndex.current++
-      } else {
-        // No more threats — auto-stop
-        if (alertRef.current) clearInterval(alertRef.current)
+    setScanCount(0)
+    let count = 0
+    intervalRef.current = window.setInterval(async () => {
+      count++
+      setScanCount(count)
+      await load()
+      if (count >= 6) {
+        if (intervalRef.current) clearInterval(intervalRef.current)
         setScanning(false)
-        setScanDone(true)
       }
-    }, 5000)
+    }, 3000)
   }
 
   const stopScan = () => {
-    if (alertRef.current) clearInterval(alertRef.current)
+    if (intervalRef.current) clearInterval(intervalRef.current)
     setScanning(false)
-    setScanDone(false)
   }
 
   useEffect(() => {
-    return () => {
-      if (alertRef.current) clearInterval(alertRef.current)
-    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [])
+
+  const radarColor = stats.failed > 0 ? 'bg-red-500' : stats.processing > 0 ? 'bg-orange-500' : 'bg-emerald-500'
+  const sweepColor = stats.failed > 0 ? 'from-red-500/40' : stats.processing > 0 ? 'from-orange-500/40' : 'from-emerald-500/40'
+  const scanLabel = stats.failed > 0 ? 'Threats detected' : stats.processing > 0 ? 'Processing files' : 'All clear'
+  const lastScan = mounted ? new Date().toLocaleTimeString() : '...'
 
   return (
     <div className="p-4 sm:p-8">
@@ -73,14 +93,17 @@ export default function DashboardPage() {
       {/* Stats */}
       <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Registered Assets', value: '12' },
-          { label: 'Active Monitorings', value: '8' },
-          { label: 'Threats Flagged', value: String(threatCount) },
-          { label: 'Resolved', value: '5' },
+          { label: 'Total Folders', value: String(folders.length), icon: FolderKanban },
+          { label: 'Total Files', value: String(stats.total), icon: Image },
+          { label: 'Secured', value: String(stats.secured), icon: CheckCircle2, color: 'text-emerald-500' },
+          { label: 'Failed', value: String(stats.failed), icon: AlertTriangle, color: stats.failed > 0 ? 'text-red-500' : 'text-muted' },
         ].map((s) => (
           <div key={s.label} className="surface rounded-xl border border-subtle p-4 sm:p-5">
-            <p className="text-secondary text-xs">{s.label}</p>
-            <p className="text-primary mt-1 text-xl sm:text-2xl font-medium">{s.value}</p>
+            <div className="flex items-center gap-2">
+              <s.icon className={`h-4 w-4 ${s.color || 'text-muted'}`} />
+              <p className="text-secondary text-xs">{s.label}</p>
+            </div>
+            <p className="text-primary mt-1.5 text-xl sm:text-2xl font-medium">{s.value}</p>
           </div>
         ))}
       </div>
@@ -96,23 +119,17 @@ export default function DashboardPage() {
               <div className="absolute inset-2 rounded-full border border-zinc-700" />
               <div className="absolute inset-4 rounded-full border border-zinc-700" />
               {/* Sweep */}
-              {scanning && (
-                <div className="absolute inset-0 overflow-hidden rounded-full">
-                  <div className="h-full w-full animate-spin" style={{ animationDuration: '2s' }}>
-                    <div className="mx-auto h-1/2 w-1/2 origin-bottom rounded-tl-full bg-gradient-to-r from-emerald-500/40 to-transparent" />
-                  </div>
+              <div className="absolute inset-0 overflow-hidden rounded-full">
+                <div className="h-full w-full animate-spin" style={{ animationDuration: '3s' }}>
+                  <div className={`mx-auto h-1/2 w-1/2 origin-bottom rounded-tl-full bg-gradient-to-r ${sweepColor} to-transparent`} />
                 </div>
-              )}
+              </div>
               {/* Center dot */}
-              <div className={`relative z-10 h-2.5 w-2.5 rounded-full ${scanning ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-500'}`} />
-              {/* Blips */}
-              {scanning && (
-                <>
-                  <span className="absolute top-2 left-1/2 z-10 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-emerald-400 animate-ping" style={{ animationDuration: '1.5s' }} />
-                  <span className="absolute bottom-3 right-3 z-10 h-1 w-1 rounded-full bg-emerald-400 animate-ping" style={{ animationDuration: '2.5s' }} />
-                  <span className="absolute top-1/2 left-2 z-10 h-1 w-1 rounded-full bg-emerald-400 animate-ping" style={{ animationDuration: '2s' }} />
-                </>
-              )}
+              <div className={`relative z-10 h-2.5 w-2.5 rounded-full ${radarColor} ${scanning ? 'animate-pulse' : ''}`} />
+              {/* Blips based on real data */}
+              {stats.failed > 0 && randomBlips(stats.failed, 'bg-red-500')}
+              {stats.processing > 0 && randomBlips(stats.processing, 'bg-orange-500')}
+              {stats.secured > 0 && stats.failed === 0 && stats.processing === 0 && randomBlips(Math.min(stats.secured, 3), 'bg-emerald-500')}
             </div>
           </div>
 
@@ -121,16 +138,14 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-primary text-sm font-medium">
-                  {scanning ? 'Scanning...' : scanDone ? 'Scan Complete' : 'Asset Monitoring'}
+                  {scanning ? `Scanning... (${scanCount}/6)` : 'Asset Monitoring'}
                 </p>
-                {scanning && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                <span className={`h-1.5 w-1.5 rounded-full ${radarColor} ${scanning ? 'animate-pulse' : ''}`} />
               </div>
               <p className="text-xs text-muted mt-1">
                 {scanning
-                  ? `Scanning 8 assets · ${findingIndex.current} threats found`
-                  : scanDone
-                  ? `Found ${findingIndex.current} threats — monitoring updated`
-                    : `${threatCount} active threats · Last scan ${mounted ? new Date().toLocaleTimeString() : '...'}`
+                  ? `${stats.total} files scanned · ${stats.failed} threats found`
+                  : `${scanLabel} · ${stats.total} files · Last scan ${lastScan}`
                 }
               </p>
             </div>
@@ -139,13 +154,13 @@ export default function DashboardPage() {
               className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-medium transition-all shrink-0 ${
                 scanning
                   ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20'
+                  : stats.failed > 0
+                  ? 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 border border-orange-500/20'
                   : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border border-emerald-500/20'
               }`}
             >
               {scanning ? (
                 <><Square className="h-3 w-3" /> Stop</>
-              ) : scanDone ? (
-                <><Scan className="h-3 w-3" /> Scan Again</>
               ) : (
                 <><Scan className="h-3 w-3" /> Scan Now</>
               )}
@@ -169,38 +184,46 @@ export default function DashboardPage() {
         <ArrowRight className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
       </Link>
 
-      {/* Alerts */}
+      {/* Recent Activity */}
       <div className="surface rounded-xl border border-subtle">
         <div className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-primary text-sm font-medium">Live Alerts</h2>
-            <span className="flex h-5 items-center rounded-full bg-red-500/10 px-2 text-[11px] font-medium text-red-500">{threatCount}</span>
+            <h2 className="text-primary text-sm font-medium">Recent Activity</h2>
+            <span className={`flex h-5 items-center rounded-full px-2 text-[11px] font-medium ${
+              stats.failed > 0 ? 'bg-red-500/10 text-red-500' : stats.processing > 0 ? 'bg-orange-500/10 text-orange-500' : 'bg-emerald-500/10 text-emerald-500'
+            }`}>
+              {stats.failed > 0 ? `${stats.failed} threats` : stats.processing > 0 ? `${stats.processing} pending` : 'All clear'}
+            </span>
           </div>
-          <Link href="/dashboard/alerts" className="text-muted text-xs hover:text-secondary transition-colors">
-            View all
-          </Link>
         </div>
-          {alerts.map((a, i) => (
-            <div key={i} className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${
-                  a.level === 'critical' ? 'bg-red-500' : a.level === 'warning' ? 'bg-orange-500' : 'bg-emerald-500'
-                }`} />
-                <div className="min-w-0">
-                  <p className={`text-sm font-medium truncate ${
-                    a.level === 'critical' ? 'text-threat-critical' : a.level === 'warning' ? 'text-threat-warning' : 'text-threat-safe'
-                  }`}>
-                    {a.threat}
-                    {a.time === 'just now' && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse align-middle" />}
-                  </p>
-                  <p className="text-muted text-xs">{a.brand}</p>
+        {recentFiles.length === 0 && folders.length === 0 ? (
+          <div className="px-4 sm:px-5 py-8 text-center">
+            <p className="text-muted text-xs">No activity yet. Upload your first asset.</p>
+          </div>
+        ) : (
+          <>
+            {/* Recent files */}
+            {recentFiles.map((f) => (
+              <div key={f.id} className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${
+                    f.status === 'failed' ? 'bg-red-500' : f.status === 'processing' ? 'bg-orange-500' : 'bg-emerald-500'
+                  }`} />
+                  <div className="min-w-0">
+                    <p className="text-primary text-sm truncate">{f.name}</p>
+                    <p className="text-muted text-xs">
+                      {f.status}
+                      {f.status === 'processing' && <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse align-middle" />}
+                    </p>
+                  </div>
                 </div>
+                <span className="text-muted text-xs shrink-0">
+                  {new Date(f.created_at).toLocaleDateString()}
+                </span>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span className="text-muted text-xs">{a.time}</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </>
+        )}
       </div>
     </div>
   )

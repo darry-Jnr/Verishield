@@ -74,6 +74,33 @@ export async function createFolder(name: string, date: string, category?: string
   return data as Folder
 }
 
+export async function getFileStats() {
+  const { data, error } = await supabase
+    .from('files')
+    .select('status')
+
+  if (error) throw error
+  const all = data as { status: string }[]
+  return {
+    total: all.length,
+    processing: all.filter((f) => f.status === 'processing').length,
+    secured: all.filter((f) => f.status === 'secured').length,
+    failed: all.filter((f) => f.status === 'failed').length,
+    threatCount: all.filter((f) => f.status === 'failed').length,
+  }
+}
+
+export async function getRecentFiles(limit = 5) {
+  const { data, error } = await supabase
+    .from('files')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return data as FileRecord[]
+}
+
 export async function getFiles(folderId: number) {
   const { data, error } = await supabase
     .from('files')
