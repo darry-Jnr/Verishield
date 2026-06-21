@@ -15,7 +15,7 @@ const DEMO_DOMAINS = [
 
 interface ScanLogEntry {
   domain: string
-  status: 'checking' | 'clean' | 'match'
+  status: 'checking' | 'clean' | 'match' | 'done'
 }
 
 function randomBlips(count: number, color: string) {
@@ -106,10 +106,22 @@ export default function DashboardPage() {
       setScanLog([...log])
     }
 
-    await Promise.all([
-      load(),
-      getScanResults().then(r => setScanResults(r)).catch(() => {}),
-    ])
+    const latestResults = await getScanResults().catch(() => [])
+    const threatMatchCount = latestResults.filter(r => {
+      try { return DEMO_DOMAINS.includes(new URL(r.matched_url).hostname.replace('www.', '')) }
+      catch { return false }
+    }).length
+
+    log.push({
+      domain: threatMatchCount > 0
+        ? `${threatMatchCount} threat${threatMatchCount > 1 ? 's' : ''} detected across ${DEMO_DOMAINS.length} domains`
+        : `All clear — no threats found across ${DEMO_DOMAINS.length} domains`,
+      status: 'done',
+    })
+    setScanLog([...log])
+
+    setScanResults(latestResults)
+    await load()
     setScanning(false)
   }
 
@@ -208,6 +220,14 @@ export default function DashboardPage() {
                 <div key={scanLog.length} style={{ animation: 'scanIn 0.35s ease-out' }} className="flex items-center gap-2">
                   {(() => {
                     const e = scanLog[scanLog.length - 1]
+                    if (e.status === 'done') {
+                      const isThreat = e.domain.includes('threat')
+                      return (
+                        <span className={isThreat ? 'text-red-500' : 'text-emerald-500'}>
+                          {isThreat ? '&#9888;' : '&#10003;'} {e.domain}
+                        </span>
+                      )
+                    }
                     return (
                       <>
                         {e.status === 'checking' && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />}
