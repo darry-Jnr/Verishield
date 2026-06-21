@@ -14,9 +14,12 @@ export default function Navbar({ onSignIn }: NavbarProps) {
           </div>
           <span className="text-primary font-semibold tracking-tight">AuraGuard</span>
         </div>
-        <button onClick={onSignIn} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-all hover:bg-primary/90">
-          Get started
-        </button>
+        <div className="relative">
+          <div className="absolute -inset-0.5 rounded-full bg-primary/20 blur-sm animate-pulse" />
+          <button onClick={onSignIn} className="relative rounded-full bg-primary px-5 py-2 text-sm font-medium text-white transition-all hover:bg-primary/90">
+            Get started
+          </button>
+        </div>
       </div>
     </nav>
   )
