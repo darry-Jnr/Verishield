@@ -1,10 +1,11 @@
+import mimetypes
 import os
 import uuid
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from supabase import create_client, Client
 
@@ -70,7 +71,7 @@ async def create_item(
         storage_path, content, {"content-type": file.content_type or "application/octet-stream"}
     )
 
-    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{storage_path}"
+    proxy_url = f"/api/media/{storage_path}"
 
     is_video = (file.content_type or "").startswith("video/")
 
@@ -78,10 +79,30 @@ async def create_item(
         "title": title,
         "price": price,
         "description": description or "",
-        "image_url": None if is_video else public_url,
-        "video_url": public_url if is_video else None,
+        "image_url": None if is_video else proxy_url,
+        "video_url": proxy_url if is_video else None,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     resp = client.schema("shop").table("items").insert(record).execute()
 
     return resp.data[0] if resp.data else {"ok": True}
+
+
+@app.get("/api/media/{storage_path:path}")
+async def serve_media(storage_path: str):
+    client = get_client()
+    try:
+        data = client.storage.from_(STORAGE_BUCKET).download(storage_path)
+    except Exception as e:
+        raise HTTPException(404, "File not found")
+
+    content_type, _ = mimetypes.guess_type(storage_path)
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    filename = storage_path.rsplit("/", 1)[-1]
+    return StreamingResponse(
+        iter([data]),
+        media_type=content_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
