@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Image, Film, FileText, Download, Calendar, Building2, Folder, Upload } from 'lucide-react'
 import { getFolders, getFiles, type Folder as FolderRecord, type FileRecord } from '@/lib/db'
 import UploadModal from '@/components/modal/upload'
+import FileDetailModal from '@/components/modal/file-detail'
 
 const typeIcon: Record<string, typeof Image> = { image: Image, video: Film, document: FileText, application: FileText }
 
@@ -12,6 +13,7 @@ export default function AssetDetailPage() {
   const { slug } = useParams()
   const router = useRouter()
   const [showUpload, setShowUpload] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null)
   const [folder, setFolder] = useState<FolderRecord | null>(null)
   const [files, setFiles] = useState<FileRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -106,6 +108,7 @@ export default function AssetDetailPage() {
               return (
                 <div
                   key={f.id}
+                  onClick={() => setSelectedFile(f)}
                   className="group relative aspect-square bg-elevated border border-subtle rounded-xl overflow-hidden hover:border-zinc-600 transition-colors cursor-pointer"
                 >
                   {f.type === 'image' ? (
@@ -136,6 +139,13 @@ export default function AssetDetailPage() {
         </div>
       </div>
       <UploadModal open={showUpload} onClose={() => setShowUpload(false)} onUpload={loadFiles} folderId={folderId} />
+      <FileDetailModal
+        open={!!selectedFile}
+        file={selectedFile}
+        onClose={() => setSelectedFile(null)}
+        onDeleted={loadFiles}
+        onRenamed={loadFiles}
+      />
     </div>
   )
 }

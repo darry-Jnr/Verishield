@@ -20,6 +20,7 @@ export interface FileRecord {
   size: string
   thumb: string
   url: string
+  storage_path: string
   status: string
   tracking_id: string | null
   created_at: string
@@ -132,4 +133,28 @@ export async function uploadFiles(
     const { error } = await supabase.from('files').insert(records)
     if (error) throw error
   }
+}
+
+export async function renameFile(fileId: number, newName: string) {
+  const { error } = await supabase
+    .from('files')
+    .update({ name: newName })
+    .eq('id', fileId)
+
+  if (error) throw error
+}
+
+export async function deleteFile(file: FileRecord) {
+  const { error: storageError } = await supabase.storage
+    .from('media')
+    .remove([file.storage_path])
+
+  if (storageError) throw storageError
+
+  const { error: dbError } = await supabase
+    .from('files')
+    .delete()
+    .eq('id', file.id)
+
+  if (dbError) throw dbError
 }
