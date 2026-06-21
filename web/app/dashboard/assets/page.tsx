@@ -16,13 +16,17 @@ export default function AssetsPage() {
   const [yearFilter, setYearFilter] = useState('All')
   const [showCreate, setShowCreate] = useState(false)
   const [folders, setFolders] = useState<Folder[]>([])
+  const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
+    setLoading(true)
     try {
       const data = await getFolders()
       setFolders(data)
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
@@ -120,7 +124,12 @@ export default function AssetsPage() {
         </div>
       </div>
 
-      {filtered.length === 0 && (
+      {loading && (
+        <div className="surface flex items-center justify-center rounded-xl border border-subtle py-20">
+          <div className="h-6 w-6 rounded-full border-2 border-zinc-600 border-t-white animate-spin" />
+        </div>
+      )}
+      {!loading && filtered.length === 0 && (
         <div className="surface flex flex-col items-center justify-center rounded-xl border border-subtle py-20 gap-4">
           {folders.length === 0 ? (
             <>
