@@ -4,8 +4,7 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from supabase import create_client, Client
 
@@ -17,9 +16,6 @@ STORAGE_BUCKET = "shop-media"
 
 app = FastAPI()
 
-# Serve static (nothing yet — just the index)
-app.mount("/static", StaticFiles(directory="test-shop"), name="static")
-
 
 def get_client() -> Client:
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
@@ -29,7 +25,9 @@ def get_client() -> Client:
 
 @app.get("/")
 async def index():
-    return HTMLResponse(open("test-shop/index.html").read())
+    import pathlib
+    html = pathlib.Path(__file__).parent / "index.html"
+    return HTMLResponse(html.read_text())
 
 
 class ShopItem(BaseModel):

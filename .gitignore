@@ -3,3 +3,4 @@ node_modules/
 engine/.env
 *.pyc
 __pycache__/
+test-shop/.env
