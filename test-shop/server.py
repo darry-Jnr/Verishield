@@ -46,7 +46,8 @@ class ShopItem(BaseModel):
 async def list_items():
     client = get_client()
     resp = (
-        client.table("items", schema="shop")
+        client.schema("shop")
+        .table("items")
         .select("*")
         .order("created_at", desc=True)
         .execute()
@@ -83,6 +84,6 @@ async def create_item(
         "video_url": public_url if is_video else None,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    resp = client.table("items", schema="shop").insert(record).execute()
+    resp = client.schema("shop").table("items").insert(record).execute()
 
     return resp.data[0] if resp.data else {"ok": True}
