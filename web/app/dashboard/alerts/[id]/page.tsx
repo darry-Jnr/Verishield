@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Globe, Mail, Phone, Image, FileText, Video, Shield, Calendar, Users } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Mail, Phone, Image, FileText, Video } from 'lucide-react'
 import { alerts } from '@/lib/alerts-data'
 
 export default function AlertDetailPage() {
@@ -18,9 +18,9 @@ export default function AlertDetailPage() {
   }
 
   const severityStyles = {
-    critical: { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-500', dot: 'bg-red-500', label: 'Critical Threat' },
-    warning: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-500', dot: 'bg-orange-500', label: 'Warning' },
-    safe: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-500', dot: 'bg-emerald-500', label: 'Status Clear' },
+    critical: { text: 'text-red-500', label: 'Critical' },
+    warning: { text: 'text-orange-500', label: 'Warning' },
+    safe: { text: 'text-emerald-500', label: 'Clear' },
   }
 
   const s = severityStyles[alert.severity]
@@ -28,146 +28,89 @@ export default function AlertDetailPage() {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <div className="px-4 sm:px-6 py-4 border-b border-subtle flex items-center justify-between">
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors text-sm">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Alerts
-        </button>
-      </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-
-          {/* Summary Card */}
-          <div className={`${s.bg} ${s.border} border rounded-xl p-5`}>
-            <div className="flex items-center gap-2 mb-3">
-              <span className={`h-2 w-2 rounded-full ${s.dot}`} />
-              <span className={`text-xs font-medium uppercase tracking-wider ${s.text}`}>{s.label}</span>
-              <span className="text-muted text-xs mx-1">·</span>
-              <span className="text-muted text-xs">{alert.date}</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-semibold text-primary mb-2">{alert.violation}</h1>
-            <p className="text-body text-sm">{alert.impact}</p>
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5">
-              <div className="flex items-center gap-2 text-sm">
-                <TypeIcon className="h-4 w-4 text-muted" />
-                <span className="text-secondary capitalize">{alert.type}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-muted" />
-                <span className="text-secondary">{alert.impressions === '—' ? 'N/A' : `${alert.impressions} reach`}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted" />
-                <span className="text-secondary">{alert.date}</span>
-              </div>
-            </div>
+        <article className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+          {/* Back link */}
+          <div className="mb-8">
+            <button onClick={() => router.back()} className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary transition-colors">
+              <ArrowLeft className="h-3 w-3" />
+              Alerts
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Domain Information */}
-            <div className="bg-elevated border border-subtle rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-subtle flex items-center gap-2">
-                <Globe className="h-4 w-4 text-muted" />
-                <h2 className="text-sm font-medium text-primary">Domain Information</h2>
-              </div>
-              <div className="divide-y divide-subtle">
-                {[
-                  { label: 'Domain', value: alert.domain, href: `https://${alert.domain}`, icon: ExternalLink },
-                  { label: 'Registrar', value: 'NameCheap, Inc.' },
-                  { label: 'Registered', value: '2024-03-14' },
-                  { label: 'Country', value: 'United States' },
-                  { label: 'Status', value: alert.status === 'resolved' ? 'Resolved' : alert.status === 'investigating' ? 'Under Investigation' : 'New', highlight: alert.status !== 'resolved' },
-                ].map((row, i) => (
-                  <div key={i} className="flex items-center justify-between px-4 py-3">
-                    <span className="text-muted text-sm">{row.label}</span>
-                    {row.href ? (
-                      <a href={row.href} target="_blank" rel="noreferrer" className="text-secondary hover:text-primary transition-colors inline-flex items-center gap-1 text-sm">
-                        {row.value} <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      <span className={`text-sm ${row.highlight ? 'text-red-400' : 'text-body'}`}>{row.value}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Affected Asset */}
-            <div className="bg-elevated border border-subtle rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-subtle flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted" />
-                <h2 className="text-sm font-medium text-primary">Affected Asset</h2>
-              </div>
-              <div className="p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${alert.thumb} flex items-center justify-center shrink-0`}>
-                    <TypeIcon className="h-6 w-6 text-white/60" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-primary">{alert.asset}</p>
-                    <p className="text-xs text-muted capitalize">{alert.type} · {alert.status.replace('-', ' ')}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted text-xs">Reach</span>
-                    <p className="text-body mt-0.5">{alert.impressions}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted text-xs">Detected</span>
-                    <p className="text-body mt-0.5">{alert.date}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted text-xs">Type</span>
-                    <p className="text-body mt-0.5 capitalize">{alert.type}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted text-xs">Status</span>
-                    <p className="text-body mt-0.5 capitalize">{alert.status.replace('-', ' ')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Status + date */}
+          <div className="flex items-center gap-3 mb-8">
+            <span className={`text-xs font-medium uppercase tracking-wider ${s.text}`}>{s.label}</span>
+            <span className="text-muted text-xs">·</span>
+            <span className="text-muted text-xs">{alert.date}</span>
           </div>
 
-          {/* Contact & Enforcement - full width */}
-          <div className="bg-elevated border border-subtle rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-subtle flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted" />
-              <h2 className="text-sm font-medium text-primary">Contact & Enforcement</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-subtle">
-              <a href={`mailto:abuse@${alert.domain}`} className="flex items-center gap-3 px-4 py-4 hover:bg-zinc-900/50 transition-colors group">
-                <div className="h-9 w-9 rounded-lg bg-zinc-800/50 flex items-center justify-center shrink-0">
-                  <Mail className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Email</p>
-                  <p className="text-sm text-secondary group-hover:text-primary transition-colors">abuse@{alert.domain}</p>
-                </div>
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl font-semibold text-primary leading-tight mb-4">
+            {alert.violation}
+          </h1>
+
+          {/* Asset byline */}
+          <p className="text-secondary text-sm mb-2">
+            <TypeIcon className="h-3.5 w-3.5 inline mr-1.5 align-text-top text-muted" />
+            {alert.asset}
+          </p>
+
+          {/* Summary — what happened */}
+          <div className="mt-8 text-body text-sm leading-relaxed space-y-4">
+            <p>
+              On <span className="text-primary font-medium">{alert.date}</span>, our scanner detected{' '}
+              <span className="text-primary font-medium">{alert.asset}</span> being used on{' '}
+              <a href={`https://${alert.domain}`} target="_blank" rel="noreferrer" className="text-secondary hover:text-primary underline underline-offset-2 transition-colors inline-flex items-center gap-1">
+                {alert.domain} <ExternalLink className="h-3 w-3" />
               </a>
-              <a href={`tel:+12025551234`} className="flex items-center gap-3 px-4 py-4 hover:bg-zinc-900/50 transition-colors group">
-                <div className="h-9 w-9 rounded-lg bg-zinc-800/50 flex items-center justify-center shrink-0">
-                  <Phone className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Phone</p>
-                  <p className="text-sm text-secondary group-hover:text-primary transition-colors">+1 (202) 555-1234</p>
-                </div>
+              {' '}without authorization.
+            </p>
+            <p>{alert.impact}</p>
+          </div>
+
+          {/* Divider */}
+          <div className="my-10 border-t border-subtle" />
+
+          {/* Contact */}
+          <div className="space-y-3">
+            <p className="text-xs text-muted uppercase tracking-wider font-medium">Contact</p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={`mailto:abuse@${alert.domain}`}
+                className="inline-flex items-center gap-2 bg-elevated border border-subtle rounded-lg px-4 py-2.5 text-sm text-secondary hover:text-primary hover:border-zinc-600 transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                abuse@{alert.domain}
               </a>
-              <a href={`https://${alert.domain}/contact`} target="_blank" rel="noreferrer" className="flex items-center gap-3 px-4 py-4 hover:bg-zinc-900/50 transition-colors group">
-                <div className="h-9 w-9 rounded-lg bg-zinc-800/50 flex items-center justify-center shrink-0">
-                  <ExternalLink className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted">Website</p>
-                  <p className="text-sm text-secondary group-hover:text-primary transition-colors">{alert.domain}/contact</p>
-                </div>
+              <a
+                href={`tel:+12025551234`}
+                className="inline-flex items-center gap-2 bg-elevated border border-subtle rounded-lg px-4 py-2.5 text-sm text-secondary hover:text-primary hover:border-zinc-600 transition-colors"
+              >
+                <Phone className="h-4 w-4" />
+                +1 (202) 555-1234
+              </a>
+              <a
+                href={`https://${alert.domain}/contact`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-elevated border border-subtle rounded-lg px-4 py-2.5 text-sm text-secondary hover:text-primary hover:border-zinc-600 transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {alert.domain}/contact
               </a>
             </div>
           </div>
-        </div>
+
+          {/* Footer */}
+          <div className="mt-12 pt-6 border-t border-subtle flex items-center justify-between">
+            <span className="text-xs text-muted">AuraGuard Enforcement Report</span>
+            <button onClick={() => router.back()} className="text-xs text-muted hover:text-primary transition-colors">
+              &larr; Alerts
+            </button>
+          </div>
+        </article>
       </div>
     </div>
   )
