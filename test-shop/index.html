@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shop</title>
+<title>LuxeWear — Brand Store</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -22,7 +22,8 @@
   }
   header .container { display: flex; align-items: center; justify-content: space-between; }
   header h1 { font-size: 20px; font-weight: 600; }
-  header span { font-size: 13px; color: #666; }
+  header nav a { font-size: 13px; color: #666; text-decoration: none; margin-left: 20px; }
+  header nav a:hover { color: #111; }
 
   /* Admin form */
   .admin-panel {
@@ -93,6 +94,29 @@
   .card-body .meta { font-size: 11px; color: #999; margin-top: 8px; }
 
   .empty { text-align: center; padding: 64px 20px; color: #999; font-size: 14px; }
+
+  /* Contact / Footer */
+  .contact-section {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+  .contact-section h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .contact-section p { font-size: 13px; color: #555; margin-bottom: 4px; }
+  .contact-section a { color: #111; text-decoration: underline; }
+  .contact-section a:hover { color: #555; }
+
+  footer {
+    text-align: center;
+    padding: 24px 0 48px;
+    font-size: 12px;
+    color: #999;
+  }
+  footer a { color: #666; text-decoration: underline; }
+
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #111; color: #fff; padding: 10px 20px; border-radius: 8px;
@@ -105,8 +129,11 @@
 
 <header>
   <div class="container">
-    <h1>Shop</h1>
-    <span>Brand Store</span>
+    <h1>LuxeWear</h1>
+    <nav>
+      <a href="/">Shop</a>
+      <a href="#contact">Contact</a>
+    </nav>
   </div>
 </header>
 
@@ -140,7 +167,20 @@
   <div id="grid" class="grid"></div>
   <div id="empty" class="empty" hidden>No items yet. Add one above.</div>
 
+  <!-- Contact -->
+  <div id="contact" class="contact-section">
+    <h2>Contact Us</h2>
+    <p>Email: <a href="mailto:support@luxewear.com">support@luxewear.com</a></p>
+    <p>Phone: <a href="tel:+12025551234">+1 (202) 555-1234</a></p>
+    <p style="margin-top:8px;font-size:12px;color:#999;">123 Fashion Ave, New York, NY 10001</p>
+  </div>
+
 </div>
+
+<footer>
+  <p>&copy; 2026 LuxeWear. All rights reserved.</p>
+  <p style="margin-top:4px;"><a href="mailto:info@luxewear.com">info@luxewear.com</a></p>
+</footer>
 
 <div id="toast" class="toast"></div>
 
