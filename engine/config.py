@@ -17,6 +17,7 @@ COMPRESS_IMAGES = True
 IMAGE_QUALITY = 85
 
 PRE_CONFIGURED_DOMAINS = [
-    # Add sites to scan here
+    "http://localhost:5000",
+    # Add more sites to scan here
     # e.g. "https://suspicious-store.com"
 ]
