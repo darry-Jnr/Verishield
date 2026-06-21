@@ -135,11 +135,41 @@ export default function DashboardPage() {
   const scanLabel = stats.failed > 0 ? 'Threats detected' : stats.processing > 0 ? 'Processing files' : 'All clear'
   const lastScan = mounted ? new Date().toLocaleTimeString() : '...'
 
+  const noAssets = folders.length === 0 && stats.total === 0
+
+  if (noAssets) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-4 sm:p-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800 mb-6">
+          <Upload className="h-8 w-8 text-zinc-400" />
+        </div>
+        <h2 className="text-primary text-lg font-medium mb-2">No assets yet</h2>
+        <p className="text-muted text-sm mb-6 max-w-sm text-center">Upload your first product media to start monitoring for unauthorized use.</p>
+        <Link
+          href="/dashboard/assets"
+          className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-black transition-opacity hover:opacity-90"
+        >
+          <Upload className="h-4 w-4" />
+          Register a new asset
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="p-4 sm:p-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-primary text-xl sm:text-2xl font-medium">Dashboard</h1>
-        <p className="text-secondary mt-1 text-sm">Brand intelligence overview</p>
+      <div className="mb-6 sm:mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-primary text-xl sm:text-2xl font-medium">Dashboard</h1>
+          <p className="text-secondary mt-1 text-sm">Brand intelligence overview</p>
+        </div>
+        <Link
+          href="/dashboard/assets"
+          className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition-opacity hover:opacity-90"
+        >
+          <Upload className="h-4 w-4" />
+          Register
+        </Link>
       </div>
 
       <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -278,22 +308,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <Link
-        href="/dashboard/assets"
-        className="group relative mb-6 sm:mb-8 flex items-center gap-4 overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent p-4 sm:p-5 transition-all hover:border-emerald-500/40 hover:from-emerald-500/10"
-      >
-        <div className="relative flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 transition-all group-hover:bg-emerald-500/20 group-hover:ring-emerald-500/30">
-          <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-primary text-sm sm:text-base font-medium">Register a new asset</p>
-          <p className="text-muted text-xs sm:text-sm mt-0.5">Upload product media to start monitoring.</p>
-        </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 text-emerald-400 transition-all group-hover:border-emerald-500/40 group-hover:bg-emerald-500/10">
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </div>
-      </Link>
-
       <div className="surface rounded-xl border border-subtle">
         <div className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3">
           <div className="flex items-center gap-2">
@@ -301,7 +315,7 @@ export default function DashboardPage() {
             <span className={`flex h-5 items-center rounded-full px-2 text-[11px] font-medium ${
               stats.failed > 0 ? 'bg-red-500/10 text-red-500' : stats.processing > 0 ? 'bg-orange-500/10 text-orange-500' : 'bg-emerald-500/10 text-emerald-500'
             }`}>
-              {stats.failed > 0 ? `${stats.failed} threats` : stats.processing > 0 ? `${stats.processing} pending` : 'All clear'}
+              {stats.failed > 0 ? `${stats.failed} issues` : stats.processing > 0 ? `${stats.processing} pending` : 'All clear'}
             </span>
           </div>
         </div>
