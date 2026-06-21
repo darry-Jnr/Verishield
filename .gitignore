@@ -4,3 +4,4 @@ engine/.env
 *.pyc
 __pycache__/
 test-shop/.env
+test-shop/.venv/
