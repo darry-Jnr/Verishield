@@ -196,6 +196,17 @@ export async function getScanResults() {
   return data as ScanResult[]
 }
 
+export async function getScanResultById(id: number) {
+  const { data, error } = await supabase
+    .from('scan_results')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) throw error
+  return data as ScanResult
+}
+
 export async function deleteFile(file: FileRecord) {
   const { error: storageError } = await supabase.storage
     .from('media')

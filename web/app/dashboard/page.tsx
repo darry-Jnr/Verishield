@@ -8,14 +8,6 @@ import Link from 'next/link'
 import { getFileStats, getFolders, getRecentFiles, getScanResults, type Folder, type FileRecord, type ScanResult } from '@/lib/db'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-const DEMO_DOMAINS = [
-  'aliexpress.com',
-  'dhgate.com',
-  'temu.com',
-  'shopify-store.com',
-  'etsy.com',
-]
-
 interface ScanLogEntry {
   domain: string
   status: 'checking' | 'clean' | 'match' | 'done'
@@ -77,50 +69,41 @@ export default function DashboardPage() {
     abortRef.current = false
     setScanning(true)
     setScanLog([])
-    setScanMessage('')
+    setScanMessage('Scanning...')
 
     const log: ScanLogEntry[] = []
 
-    for (const domain of DEMO_DOMAINS) {
-      if (abortRef.current) break
+    // Get matched domains from existing results for the rolling feed
+    const existingResults = await getScanResults().catch(() => [])
 
-      log.push({ domain, status: 'checking' })
+    try {
+      const res = await fetch('/api/scan', { method: 'POST' })
+      const data = await res.json()
+      if (!data.ok) throw new Error(data.stderr || data.error)
+
+      const newResults = await getScanResults().catch(() => [])
+      const newDomains = newResults
+        .filter(r => { try { return !!r.matched_url } catch { return false } })
+        .map(r => { try { return new URL(r.matched_url).hostname.replace('www.', '') } catch { return r.matched_url } })
+        .filter(Boolean)
+
+      for (const domain of [...new Set(newDomains)]) {
+        log.push({ domain, status: 'match' })
+        setScanLog([...log])
+      }
+
+      if (newDomains.length === 0) {
+        log.push({ domain: 'Nothing found', status: 'done' })
+      } else {
+        log.push({ domain: `${newDomains.length} match${newDomains.length > 1 ? 'es' : ''} found`, status: 'done' })
+      }
       setScanLog([...log])
-
-      await new Promise(r => setTimeout(r, 1200 + Math.random() * 800))
-
-      if (abortRef.current) break
-
-      let isMatch = false
-      try {
-        const results = await getScanResults()
-        for (const r of results) {
-          try {
-            if (r.matched_url && new URL(r.matched_url).hostname.replace('www.', '') === domain) {
-              isMatch = true
-              break
-            }
-          } catch {}
-        }
-      } catch {}
-
-      log[log.length - 1].status = isMatch ? 'match' : 'clean'
+      setScanMessage('')
+    } catch (err: any) {
+      log.push({ domain: 'Scan failed', status: 'done' })
       setScanLog([...log])
+      setScanMessage(err.message || 'Scan failed')
     }
-
-    const latestResults = await getScanResults().catch(() => [])
-    const threatMatchCount = latestResults.filter(r => {
-      try { return DEMO_DOMAINS.includes(new URL(r.matched_url).hostname.replace('www.', '')) }
-      catch { return false }
-    }).length
-
-    log.push({
-      domain: threatMatchCount > 0
-        ? `${threatMatchCount} match${threatMatchCount > 1 ? 'es' : ''} found`
-        : 'Nothing found',
-      status: 'done',
-    })
-    setScanLog([...log])
 
     await queryClient.invalidateQueries({ queryKey: ['scan-results'] })
     await queryClient.invalidateQueries({ queryKey: ['folders'] })
@@ -276,7 +259,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-xs text-muted mt-1">
                 {scanMessage || (scanning
-                  ? `Checking ${DEMO_DOMAINS.length} domains for stolen assets`
+                  ? `Scanning registered domains for stolen assets`
                   : `${scanLabel} · ${stats.total} files · Last scan ${lastScan}`
                 )}
               </p>
