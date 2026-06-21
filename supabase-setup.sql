@@ -20,6 +20,23 @@ create policy "Owners can delete from media"
   on storage.objects for delete
   using (bucket_id = 'media' and auth.uid() = owner);
 
+-- System health heartbeat table
+create table if not exists service_heartbeat (
+  service_name text primary key,
+  last_seen timestamptz not null default now()
+);
+
+alter table service_heartbeat enable row level security;
+
+create policy "Authenticated users can read service heartbeat"
+  on service_heartbeat for select
+  using (auth.role() = 'authenticated');
+
+create policy "Service key can upsert service heartbeat"
+  on service_heartbeat for all
+  using (true)
+  with check (true);
+
 -- Add columns to the files table
 alter table files add column if not exists url text;
 alter table files add column if not exists storage_path text;

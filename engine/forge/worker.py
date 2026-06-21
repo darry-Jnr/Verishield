@@ -6,7 +6,7 @@ import os
 import traceback
 
 from config import SUPABASE_URL, SUPABASE_ANON_KEY, POLL_INTERVAL, TRACKING_ID_PREFIX, STORAGE_BUCKET
-from db import get_client, get_processing_files, mark_as_secured, mark_as_failed
+from db import get_client, get_processing_files, mark_as_secured, mark_as_failed, record_heartbeat
 from forge.stampers import image, media
 
 logging.basicConfig(
@@ -85,6 +85,10 @@ def main_loop():
                 process_file(CLIENT, f)
         except Exception as e:
             logger.error("Poll error: %s", e)
+        try:
+            record_heartbeat(CLIENT)
+        except Exception as e:
+            logger.error("Heartbeat error: %s", e)
         time.sleep(POLL_INTERVAL)
 
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import SystemStatus from '@/components/system-status'
 
 const nav = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -63,6 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
+        <SystemStatus />
         <div className="border-t border-subtle px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">

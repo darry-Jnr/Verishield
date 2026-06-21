@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from supabase import create_client, Client
 
 from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
@@ -52,3 +54,11 @@ def get_user(client: Client, user_id: str) -> dict | None:
         .execute()
     )
     return resp.data
+
+
+def record_heartbeat(client: Client, service_name: str = "forge") -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    client.table("service_heartbeat").upsert({
+        "service_name": service_name,
+        "last_seen": now,
+    }).execute()
