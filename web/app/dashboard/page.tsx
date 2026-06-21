@@ -144,13 +144,13 @@ export default function DashboardPage() {
           <Upload className="h-8 w-8 text-zinc-400" />
         </div>
         <h2 className="text-primary text-lg font-medium mb-2">No assets yet</h2>
-        <p className="text-muted text-sm mb-6 max-w-sm text-center">Upload your first product media to start monitoring for unauthorized use.</p>
+        <p className="text-muted text-sm mb-6 max-w-sm text-center">Add your first product media to start tracking.</p>
         <Link
           href="/dashboard/assets"
           className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-black transition-opacity hover:opacity-90"
         >
           <Upload className="h-4 w-4" />
-          Register a new asset
+          Add your first asset
         </Link>
       </div>
     )
@@ -168,7 +168,7 @@ export default function DashboardPage() {
           className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition-opacity hover:opacity-90"
         >
           <Upload className="h-4 w-4" />
-          Register
+          Add asset
         </Link>
       </div>
 
