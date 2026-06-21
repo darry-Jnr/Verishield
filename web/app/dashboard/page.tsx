@@ -115,7 +115,7 @@ export default function DashboardPage() {
     log.push({
       domain: threatMatchCount > 0
         ? `${threatMatchCount} match${threatMatchCount > 1 ? 'es' : ''} found`
-        : 'No threats found',
+        : 'Nothing found',
       status: 'done',
     })
     setScanLog([...log])
