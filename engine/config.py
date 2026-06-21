@@ -15,3 +15,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 COMPRESS_IMAGES = True
 IMAGE_QUALITY = 85
+
+PRE_CONFIGURED_DOMAINS = [
+    # Add sites to scan here
+    # e.g. "https://suspicious-store.com"
+]

@@ -173,6 +173,29 @@ export async function renameFile(fileId: number, newName: string) {
   if (error) throw error
 }
 
+export interface ScanResult {
+  id: number
+  tracking_id: string
+  file_id: number
+  user_id: string
+  matched_url: string
+  matched_image_url: string
+  page_title: string | null
+  site_email: string | null
+  impact_summary: string | null
+  detected_at: string
+}
+
+export async function getScanResults() {
+  const { data, error } = await supabase
+    .from('scan_results')
+    .select('*')
+    .order('detected_at', { ascending: false })
+
+  if (error) throw error
+  return data as ScanResult[]
+}
+
 export async function deleteFile(file: FileRecord) {
   const { error: storageError } = await supabase.storage
     .from('media')
