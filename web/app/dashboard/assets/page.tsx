@@ -58,7 +58,7 @@ export default function AssetsPage() {
           <h1 className="text-primary text-xl sm:text-2xl font-medium">Assets</h1>
           <p className="text-secondary mt-1 text-sm">Your registered product media.</p>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn-primary self-start text-sm">
+        <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition-opacity hover:opacity-90 self-start">
           <FolderPlus className="h-4 w-4" />
           Create Folder
         </button>
@@ -140,7 +140,7 @@ export default function AssetsPage() {
                 <p className="text-primary text-sm font-medium">No assets yet</p>
                 <p className="text-muted text-xs mt-1">Create your first folder to get started.</p>
               </div>
-              <button onClick={() => setShowCreate(true)} className="btn-primary text-sm mt-2">
+              <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition-opacity hover:opacity-90 mt-2">
                 <FolderPlus className="h-4 w-4" />
                 Create Folder
               </button>
