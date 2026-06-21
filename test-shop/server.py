@@ -13,7 +13,7 @@ load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
-STORAGE_BUCKET = "media"
+STORAGE_BUCKET = "shop-media"
 
 app = FastAPI()
 
@@ -46,7 +46,7 @@ class ShopItem(BaseModel):
 async def list_items():
     client = get_client()
     resp = (
-        client.table("shop_items")
+        client.table("items", schema="shop")
         .select("*")
         .order("created_at", desc=True)
         .execute()
@@ -63,7 +63,6 @@ async def create_item(
 ):
     client = get_client()
 
-    # Upload file to Supabase Storage
     content = await file.read()
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "bin"
     storage_path = f"shop/{uuid.uuid4().hex}.{ext}"
@@ -72,13 +71,10 @@ async def create_item(
         storage_path, content, {"content-type": file.content_type or "application/octet-stream"}
     )
 
-    # Get public URL
     public_url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{storage_path}"
 
-    # Determine if image or video
     is_video = (file.content_type or "").startswith("video/")
 
-    # Insert DB record
     record = {
         "title": title,
         "price": price,
@@ -87,6 +83,6 @@ async def create_item(
         "video_url": public_url if is_video else None,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    resp = client.table("shop_items").insert(record).execute()
+    resp = client.table("items", schema="shop").insert(record).execute()
 
     return resp.data[0] if resp.data else {"ok": True}
