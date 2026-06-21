@@ -202,32 +202,27 @@ export default function DashboardPage() {
 
         {scanLog.length > 0 && (
           <div className="border-t border-subtle px-4 sm:px-5 py-3">
-            <div className="space-y-1.5">
-              {scanLog.map((entry, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs font-mono">
-                  {entry.status === 'checking' && (
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
-                  )}
-                  {entry.status === 'clean' && (
-                    <span className="text-emerald-500 shrink-0">&#10003;</span>
-                  )}
-                  {entry.status === 'match' && (
-                    <span className="text-red-500 shrink-0">&#9888;</span>
-                  )}
-                  <span className={`${entry.status === 'checking' ? 'text-amber-400' : entry.status === 'match' ? 'text-red-400' : 'text-secondary'}`}>
-                    {entry.domain}
-                  </span>
-                  {entry.status === 'checking' && (
-                    <span className="text-muted animate-pulse">checking...</span>
-                  )}
-                  {entry.status === 'clean' && (
-                    <span className="text-muted">No matches</span>
-                  )}
-                  {entry.status === 'match' && (
-                    <span className="text-red-500">Match found</span>
-                  )}
+            <style>{`@keyframes scanIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+            <div className="flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center gap-2 min-w-0">
+                <div key={scanLog.length} style={{ animation: 'scanIn 0.35s ease-out' }} className="flex items-center gap-2">
+                  {(() => {
+                    const e = scanLog[scanLog.length - 1]
+                    return (
+                      <>
+                        {e.status === 'checking' && <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />}
+                        {e.status === 'clean' && <span className="text-emerald-500 shrink-0 transition-opacity">&#10003;</span>}
+                        {e.status === 'match' && <span className="text-red-500 shrink-0 transition-opacity">&#9888;</span>}
+                        <span className={e.status === 'checking' ? 'text-amber-400' : e.status === 'match' ? 'text-red-400' : 'text-secondary'}>{e.domain}</span>
+                        {e.status === 'checking' && <span className="text-muted animate-pulse">checking...</span>}
+                        {e.status === 'clean' && <span className="text-muted">No matches</span>}
+                        {e.status === 'match' && <span className="text-red-500">Match found</span>}
+                      </>
+                    )
+                  })()}
                 </div>
-              ))}
+              </div>
+              <Link href="/dashboard/scan-logs" className="ml-auto text-muted hover:text-primary transition-colors shrink-0 pl-3">View all &rarr;</Link>
             </div>
           </div>
         )}
