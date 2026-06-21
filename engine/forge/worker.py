@@ -52,7 +52,11 @@ def process_file(client, file_record: dict) -> None:
         logger.info("Stamped to %s", stamped_path)
 
         with open(stamped_path, "rb") as f:
-            client.storage.from_(STORAGE_BUCKET).update(storage_path, f)
+            client.storage.from_(STORAGE_BUCKET).update(
+                storage_path,
+                f,
+                file_options={"content-disposition": "attachment"},
+            )
 
         mark_as_secured(client, file_id, tracking_id)
         logger.info("Secured file %s with tracking_id=%s", file_id, tracking_id)
