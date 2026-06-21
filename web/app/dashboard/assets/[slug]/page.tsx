@@ -57,8 +57,26 @@ export default function AssetDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-secondary text-sm">Loading...</p>
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-5xl mx-auto p-4 sm:p-6 animate-pulse">
+            <div className="h-3 w-24 rounded bg-zinc-800 mb-4" />
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <div className="h-7 w-56 rounded bg-zinc-800" />
+              <div className="h-9 w-24 rounded-lg bg-zinc-800 shrink-0" />
+            </div>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="h-4 w-28 rounded bg-zinc-800/50" />
+              <div className="h-4 w-20 rounded bg-zinc-800/50" />
+              <div className="h-4 w-16 rounded bg-zinc-800/50" />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {[1,2,3,4,5,6].map(i => (
+                <div key={i} className="aspect-square bg-zinc-900/50 rounded-xl border border-subtle" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

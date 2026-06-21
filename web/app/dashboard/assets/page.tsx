@@ -125,8 +125,20 @@ export default function AssetsPage() {
       </div>
 
       {loading && (
-        <div className="surface flex items-center justify-center rounded-xl border border-subtle py-20">
-          <div className="h-6 w-6 rounded-full border-2 border-zinc-600 border-t-white animate-spin" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 animate-pulse">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="surface rounded-xl border border-subtle overflow-hidden">
+              <div className="relative aspect-[4/3] bg-zinc-900/50">
+                <div className="absolute bottom-0 left-0 right-0 h-[80%] rounded-b-xl rounded-tl-xl bg-zinc-800/80" />
+                <div className="absolute top-0 right-0 w-[44%] h-[34%] rounded-tr-xl rounded-bl-xl bg-zinc-800/80" />
+              </div>
+              <div className="p-3 sm:p-4 space-y-2">
+                <div className="h-4 w-3/4 rounded bg-zinc-800" />
+                <div className="h-3 w-1/2 rounded bg-zinc-800/50" />
+                <div className="h-3 w-1/3 rounded bg-zinc-800/50" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
       {!loading && filtered.length === 0 && (

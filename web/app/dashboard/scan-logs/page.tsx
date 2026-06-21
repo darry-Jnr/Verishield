@@ -36,8 +36,18 @@ export default function ScanLogsPage() {
         </div>
 
         {loading ? (
-          <div className="px-4 sm:px-5 py-8 text-center">
-            <p className="text-muted text-xs animate-pulse">Loading...</p>
+          <div className="animate-pulse">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="flex items-start gap-3 border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
+                <div className="h-4 w-4 shrink-0 mt-0.5 rounded bg-zinc-800" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="h-4 w-48 rounded bg-zinc-800" />
+                  <div className="h-3 w-64 rounded bg-zinc-800/50" />
+                  <div className="h-3 w-36 rounded bg-zinc-800/50" />
+                </div>
+                <div className="h-3 w-20 rounded bg-zinc-800/50 shrink-0" />
+              </div>
+            ))}
           </div>
         ) : results.length === 0 ? (
           <div className="px-4 sm:px-5 py-8 text-center">
