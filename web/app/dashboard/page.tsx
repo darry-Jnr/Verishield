@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [scanResults, setScanResults] = useState<ScanResult[]>([])
   const [scanMessage, setScanMessage] = useState('')
   const [mounted, setMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
   const abortRef = useRef(false)
 
   useEffect(() => { setMounted(true) }, [])
@@ -58,6 +59,8 @@ export default function DashboardPage() {
       setRecentFiles(filesData)
     } catch (e) {
       console.error(e)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -136,6 +139,62 @@ export default function DashboardPage() {
   const lastScan = mounted ? new Date().toLocaleTimeString() : '...'
 
   const noAssets = folders.length === 0 && stats.total === 0
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-8 animate-pulse">
+        <div className="mb-6 sm:mb-8 flex items-start justify-between">
+          <div>
+            <div className="h-7 w-40 rounded bg-zinc-800" />
+            <div className="h-4 w-56 rounded bg-zinc-800/50 mt-2" />
+          </div>
+          <div className="h-9 w-28 rounded-lg bg-zinc-800" />
+        </div>
+        <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="rounded-xl border border-subtle p-4 sm:p-5 bg-surface">
+              <div className="h-4 w-20 rounded bg-zinc-800 mb-3" />
+              <div className="h-7 w-12 rounded bg-zinc-800" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-subtle overflow-hidden mb-6">
+          <div className="flex flex-col sm:flex-row">
+            <div className="w-full sm:w-32 aspect-square bg-zinc-900/50" />
+            <div className="flex-1 p-4 sm:p-5">
+              <div className="h-5 w-36 rounded bg-zinc-800 mb-2" />
+              <div className="h-4 w-48 rounded bg-zinc-800/50" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-subtle mb-6 p-4 sm:p-5">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 shrink-0 rounded-xl bg-zinc-800" />
+            <div className="flex-1">
+              <div className="h-4 w-40 rounded bg-zinc-800 mb-2" />
+              <div className="h-3 w-56 rounded bg-zinc-800/50" />
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-subtle">
+          <div className="border-b border-subtle px-4 sm:px-5 py-3">
+            <div className="h-4 w-28 rounded bg-zinc-800" />
+          </div>
+          {[1,2,3].map(i => (
+            <div key={i} className="border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 shrink-0 rounded-full bg-zinc-800" />
+                <div className="flex-1">
+                  <div className="h-4 w-44 rounded bg-zinc-800 mb-1" />
+                  <div className="h-3 w-20 rounded bg-zinc-800/50" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (noAssets) {
     return (
