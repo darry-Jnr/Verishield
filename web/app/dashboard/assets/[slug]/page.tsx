@@ -108,9 +108,13 @@ export default function AssetDetailPage() {
                   key={f.id}
                   className="group relative aspect-square bg-elevated border border-subtle rounded-xl overflow-hidden hover:border-zinc-600 transition-colors cursor-pointer"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${f.thumb} flex items-center justify-center`}>
-                    <FileIcon className="h-10 w-10 text-white/30" />
-                  </div>
+                  {f.type === 'image' ? (
+                    <img src={f.url} alt={f.name} className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${f.thumb} flex items-center justify-center`}>
+                      <FileIcon className="h-10 w-10 text-white/30" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all" />
                   <a
                     href={f.url}
