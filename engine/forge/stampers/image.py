@@ -5,6 +5,22 @@ import piexif
 
 from forge.compress import compress_image
 
+TRACKING_PREFIX = "AURAGUARD_TRACKING_ID="
+
+
+def read_tracking_id(file_path: str) -> str | None:
+    img = Image.open(file_path)
+    exif_data = img.info.get("exif", b"")
+    if not exif_data:
+        return None
+    exif_dict = piexif.load(exif_data)
+    comment = exif_dict.get("Exif", {}).get(piexif.ExifIFD.UserComment, b"")
+    if isinstance(comment, bytes):
+        comment = comment.decode("utf-8", errors="replace")
+    if comment.startswith(TRACKING_PREFIX):
+        return comment[len(TRACKING_PREFIX):].strip()
+    return None
+
 
 def can_stamp(file_type: str) -> bool:
     return file_type in ("image",)
@@ -21,7 +37,7 @@ def stamp(file_path: str, tracking_id: str) -> str:
         exif_dict = {"Exif": {}, "0th": {}, "1st": {}, "GPS": {}, "Interop": {}}
 
     exif_dict["Exif"][piexif.ExifIFD.UserComment] = (
-        f"AURAGUARD_TRACKING_ID={tracking_id}".encode("utf-8")
+        f"{TRACKING_PREFIX}{tracking_id}".encode("utf-8")
     )
 
     exif_bytes = piexif.dump(exif_dict)

@@ -22,6 +22,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
   const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
 
   const [form, setForm] = useState({
     productName: '',
@@ -51,6 +52,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
   const handleRegister = async () => {
     if (!folderId || files.length === 0) return
     setBusy(true)
+    setStatusMessage('')
     try {
       await uploadFiles(
         folderId,
@@ -61,13 +63,18 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
           size: (f.size / 1024 / 1024).toFixed(2) + ' MB',
         })),
       )
-      setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
-      setFiles([])
-      setStep('files')
-      onUpload?.()
-      onClose()
+      setStatusMessage(`Uploaded — stamping in progress`)
+      setTimeout(() => {
+        setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
+        setFiles([])
+        setStep('files')
+        setStatusMessage('')
+        onUpload?.()
+        onClose()
+      }, 1500)
     } catch (e) {
       console.error(e)
+      setStatusMessage('Upload failed. Try again.')
     } finally {
       setBusy(false)
     }
@@ -324,6 +331,9 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
                   {busy ? 'Registering...' : 'Register Asset'}
                 </button>
               </div>
+              {statusMessage && (
+                <p className="mt-3 text-center text-xs text-emerald-500 font-medium">{statusMessage}</p>
+              )}
             </>
           )}
         </div>

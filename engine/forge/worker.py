@@ -48,6 +48,28 @@ def process_file(client, file_record: dict) -> None:
         with open(tmp_original, "wb") as f:
             f.write(data)
 
+        existing_id = None
+        if file_type == "image":
+            existing_id = image.read_tracking_id(tmp_original)
+
+        if existing_id:
+            original = get_file_by_tracking_id(client, existing_id)
+            if original and original["user_id"] != file_record.get("user_id"):
+                msg = f"This image is already protected by another user ({existing_id})"
+                logger.warning(msg)
+                mark_as_failed(client, file_id, msg)
+                return
+            tracking_id = existing_id
+            logger.info("File %s already stamped with tracking_id=%s (re-upload by same user)", file_id, tracking_id)
+            with open(tmp_original, "rb") as f:
+                client.storage.from_(STORAGE_BUCKET).update(
+                    storage_path,
+                    f,
+                    file_options={"content-disposition": "attachment"},
+                )
+            mark_as_secured(client, file_id, tracking_id)
+            return
+
         tracking_id = f"{TRACKING_ID_PREFIX}-{uuid.uuid4().hex[:8].upper()}"
         stamped_path = stamper(tmp_original, tracking_id)
         logger.info("Stamped to %s", stamped_path)
