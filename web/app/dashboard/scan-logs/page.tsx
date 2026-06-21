@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { Search } from 'lucide-react'
 import Link from 'next/link'
 import { getScanResults, type ScanResult } from '@/lib/db'
 
@@ -28,7 +28,7 @@ export default function ScanLogsPage() {
           <div className="flex items-center gap-2">
             <h2 className="text-primary text-sm font-medium">All Scans</h2>
             {results.length > 0 && (
-              <span className="flex h-5 items-center rounded-full bg-red-500/10 px-2 text-[11px] font-medium text-red-500">
+              <span className="flex h-5 items-center rounded-full bg-amber-500/10 px-2 text-[11px] font-medium text-amber-500">
                 {results.length} {results.length === 1 ? 'match' : 'matches'}
               </span>
             )}
@@ -47,7 +47,7 @@ export default function ScanLogsPage() {
           results.map((r) => (
             <div key={r.id} className="border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <Search className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
                   <p className="text-primary text-sm truncate">
                     {r.matched_url ? new URL(r.matched_url).hostname : 'Unknown'}

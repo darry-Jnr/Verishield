@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Upload, ArrowRight, Scan, Square, FolderKanban, Image, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Upload, ArrowRight, Scan, Square, FolderKanban, Image, CheckCircle2, AlertTriangle, Search } from 'lucide-react'
 import Link from 'next/link'
 import { getFileStats, getFolders, getRecentFiles, getScanResults, type Folder, type FileRecord, type ScanResult } from '@/lib/db'
 
@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
     log.push({
       domain: threatMatchCount > 0
-        ? `${threatMatchCount} threat${threatMatchCount > 1 ? 's' : ''} detected`
+        ? `${threatMatchCount} match${threatMatchCount > 1 ? 'es' : ''} found`
         : 'No threats found',
       status: 'done',
     })
@@ -221,10 +221,10 @@ export default function DashboardPage() {
                   {(() => {
                     const e = scanLog[scanLog.length - 1]
                     if (e.status === 'done') {
-                      const isThreat = e.domain.includes('threat')
+                      const hasMatch = e.domain.includes('match')
                       return (
-                        <span className={`flex items-center gap-1.5 ${isThreat ? 'text-red-500' : 'text-emerald-500'}`}>
-                          {isThreat ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        <span className={`flex items-center gap-1.5 ${hasMatch ? 'text-amber-500' : 'text-emerald-500'}`}>
+                          {hasMatch ? <Search className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                           <span className="font-medium">{e.domain}</span>
                         </span>
                       )
@@ -253,9 +253,9 @@ export default function DashboardPage() {
         <div className="surface mb-6 rounded-xl border border-subtle">
           <div className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <Search className="h-4 w-4 text-amber-500" />
               <h2 className="text-primary text-sm font-medium">Scan Results</h2>
-              <span className="flex h-5 items-center rounded-full bg-red-500/10 px-2 text-[11px] font-medium text-red-500">
+              <span className="flex h-5 items-center rounded-full bg-amber-500/10 px-2 text-[11px] font-medium text-amber-500">
                 {scanResults.length} {scanResults.length === 1 ? 'match' : 'matches'}
               </span>
             </div>
