@@ -85,15 +85,15 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
 
     return (
       <div
-        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       >
         <div
-          className="relative flex flex-col items-center justify-center w-full h-full select-none"
+          className="relative w-full max-w-4xl mx-4 rounded-2xl border border-subtle bg-surface shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Top bar */}
-          <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 sm:px-6 py-3 bg-gradient-to-b from-black/40 to-transparent">
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-subtle">
             <div className="flex items-center gap-3 min-w-0">
               {renaming ? (
                 <div className="flex items-center gap-2">
@@ -101,113 +101,109 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleRename()}
-                    className="bg-black/60 rounded-lg border border-white/10 px-3 py-1 text-xs text-white outline-none focus:border-white/30 w-40"
+                    className="elevated rounded-lg border border-subtle px-3 py-1.5 text-xs text-primary outline-none focus:border-zinc-600 w-40"
                     autoFocus
                   />
-                  <button onClick={handleRename} disabled={busy} className="text-white/70 hover:text-white transition-colors">
-                    {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  <button onClick={handleRename} disabled={busy} className="text-primary hover:text-secondary transition-colors">
+                    {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               ) : (
-                <p className="text-white/60 text-xs font-medium truncate max-w-[200px] sm:max-w-sm">{file.name}</p>
+                <p className="text-primary text-sm font-medium truncate max-w-[200px] sm:max-w-sm">{file.name}</p>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-white/30 text-[11px] tabular-nums">
+            <div className="flex items-center gap-3">
+              <span className="text-muted text-[11px] tabular-nums">
                 {currentIndex + 1} / {imageFiles.length}
               </span>
               <button
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-all"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-subtle bg-elevated text-muted hover:text-primary transition-colors"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Prev click zone */}
-          {hasPrev && (
-            <button
-              onClick={goPrev}
-              className="absolute left-0 top-0 bottom-0 z-10 w-1/4 flex items-center justify-start pl-4 sm:pl-8 text-white/0 hover:text-white/40 transition-all group"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">
-                <ChevronLeft className="h-6 w-6" />
-              </div>
-            </button>
-          )}
+          {/* Image area with nav buttons */}
+          <div className="relative flex items-center justify-center bg-black/40 min-h-[300px] sm:min-h-[400px] max-h-[60vh]">
+            {hasPrev && (
+              <button
+                onClick={goPrev}
+                className="absolute left-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white/70 hover:bg-black/70 hover:text-white transition-all backdrop-blur-sm"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            )}
 
-          {/* Next click zone */}
-          {hasNext && (
-            <button
-              onClick={goNext}
-              className="absolute right-0 top-0 bottom-0 z-10 w-1/4 flex items-center justify-end pr-4 sm:pr-8 text-white/0 hover:text-white/40 transition-all group"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">
-                <ChevronRight className="h-6 w-6" />
-              </div>
-            </button>
-          )}
-
-          {/* Image */}
-          <div className="relative flex items-center justify-center w-full h-full p-16 sm:p-20 animate-in fade-in zoom-in-95 duration-300">
             <img
               key={file.id}
               src={file.url}
               alt={file.name}
-              className="max-h-full max-w-full rounded-lg object-contain transition-all duration-200"
-              style={{ boxShadow: '0 0 60px rgba(0,0,0,0.4)' }}
+              className="max-h-full max-w-full object-contain p-4 transition-opacity duration-300"
+              style={{
+                opacity: 1,
+                animation: 'fadeIn 0.3s ease',
+              }}
             />
+
+            {hasNext && (
+              <button
+                onClick={goNext}
+                className="absolute right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white/70 hover:bg-black/70 hover:text-white transition-all backdrop-blur-sm"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
           </div>
 
           {/* Bottom bar */}
-          <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/40 to-transparent pt-12 pb-4 sm:pb-6">
-            <div className="flex items-center justify-center gap-4 px-4">
-              <button
-                onClick={() => { setConfirmDelete(true) }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-all"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-
+          <div className="flex items-center justify-between border-t border-subtle px-5 py-3">
+            <div>
+              {confirmDelete ? (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setConfirmDelete(false)} disabled={busy} className="btn-inverted text-xs">Cancel</button>
+                  <button onClick={handleDelete} disabled={busy} className="btn-danger text-xs">
+                    {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                    {busy ? 'Deleting...' : 'Confirm Delete'}
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDelete(true)} className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1.5 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
               {!renaming && (
                 <button
                   onClick={() => { setNewName(file.name); setRenaming(true); setConfirmDelete(false) }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/30 hover:bg-white/10 hover:text-white transition-all"
+                  className="btn-inverted text-xs"
                 >
                   <Pencil className="h-3.5 w-3.5" />
+                  Rename
                 </button>
               )}
-
               <a
                 href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-[11px] text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-full px-4 py-1.5 transition-all"
+                className="btn-primary text-xs"
               >
                 <Download className="h-3.5 w-3.5" />
                 Download
               </a>
             </div>
           </div>
-
-          {/* Delete confirmation overlay */}
-          {confirmDelete && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfirmDelete(false)}>
-              <div className="surface rounded-2xl border border-subtle p-6 max-w-xs w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                <p className="text-primary text-sm font-medium text-center">Delete this file?</p>
-                <p className="text-muted text-xs text-center mt-1">This cannot be undone.</p>
-                <div className="flex items-center justify-center gap-3 mt-5">
-                  <button onClick={() => setConfirmDelete(false)} disabled={busy} className="btn-inverted text-xs">Cancel</button>
-                  <button onClick={handleDelete} disabled={busy} className="btn-danger text-xs">
-                    {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
+        <style jsx>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        `}</style>
       </div>
     )
   }
