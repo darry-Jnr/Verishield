@@ -3,13 +3,16 @@ import tempfile
 from PIL import Image
 import piexif
 
+from forge.compress import compress_image
+
 
 def can_stamp(file_type: str) -> bool:
     return file_type in ("image",)
 
 
 def stamp(file_path: str, tracking_id: str) -> str:
-    img = Image.open(file_path)
+    compressed = compress_image(file_path)
+    img = Image.open(compressed)
 
     exif_data = img.info.get("exif", b"")
     if exif_data:
@@ -27,10 +30,13 @@ def stamp(file_path: str, tracking_id: str) -> str:
     img_format = img.format or 'PNG'
     ext = ext_map.get(img_format, '.png')
 
-    base = os.path.basename(file_path)
+    base = os.path.basename(compressed)
     name_no_ext = os.path.splitext(base)[0]
     out_path = os.path.join(tempfile.gettempdir(), f"stamped_{name_no_ext}{ext}")
     img.save(out_path, exif=exif_bytes)
     img.close()
+
+    if compressed != file_path:
+        os.remove(compressed)
 
     return out_path

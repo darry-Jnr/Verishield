@@ -41,6 +41,7 @@ def process_file(client, file_record: dict) -> None:
 
     _, ext = os.path.splitext(file_record.get("name", ""))
     tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}{ext}")
+    stamped_path = None
     try:
         logger.info("Downloading via Supabase client: media/%s", storage_path)
         data = client.storage.from_(STORAGE_BUCKET).download(storage_path)
@@ -65,8 +66,8 @@ def process_file(client, file_record: dict) -> None:
         logger.error("Failed to process file %s:\n%s", file_id, err)
         mark_as_failed(client, file_id, err[:2000])
     finally:
-        for p in (tmp_original,):
-            if os.path.exists(p):
+        for p in (tmp_original, stamped_path):
+            if p and os.path.exists(p):
                 os.remove(p)
 
 
