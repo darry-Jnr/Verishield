@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 
 from supabase import create_client, Client
 
-from config import SUPABASE_URL, SUPABASE_SERVICE_KEY
-from scraper.searcher import search_image
+from config import SUPABASE_URL, SUPABASE_SERVICE_KEY, PRE_CONFIGURED_DOMAINS
+from scraper.crawler import crawl
+from scraper.searcher import _download_and_scan
 from ai import ask
 
 logger = logging.getLogger(__name__)
@@ -46,57 +47,80 @@ def _generate_impact_summary(file_name: str, source_url: str, page_title: str, s
         return ""
 
 
+def _lookup_file_by_tracking_id(client: Client, tracking_id: str) -> dict | None:
+    resp = (
+        client.table("files")
+        .select("id, name, user_id")
+        .eq("tracking_id", tracking_id)
+        .maybe_single()
+        .execute()
+    )
+    return resp.data
+
+
+def _record_match(client: Client, file_record: dict, match: dict) -> None:
+    existing = (
+        client.table("scan_results")
+        .select("id")
+        .eq("tracking_id", match["tracking_id"])
+        .eq("matched_url", match["source_url"])
+        .maybe_single()
+        .execute()
+    )
+    if existing.data:
+        logger.info("Match already recorded for %s on %s", match["tracking_id"], match["source_url"])
+        return
+
+    impact_summary = _generate_impact_summary(
+        file_name=file_record.get("name", "Unknown"),
+        source_url=match.get("source_url", ""),
+        page_title=match.get("page_title", ""),
+        site_email=match.get("site_email"),
+        tracking_id=match.get("tracking_id", ""),
+    )
+
+    record = {
+        "tracking_id": match["tracking_id"],
+        "file_id": file_record["id"],
+        "user_id": file_record["user_id"],
+        "matched_url": match["source_url"],
+        "matched_image_url": match["matched_image_url"],
+        "page_title": match["page_title"],
+        "site_email": match["site_email"],
+        "impact_summary": impact_summary,
+        "detected_at": datetime.now(timezone.utc).isoformat(),
+    }
+    client.table("scan_results").insert(record).execute()
+    logger.info("Recorded match: %s on %s", match["tracking_id"], match["source_url"])
+
+
 def detect_all():
     client = _get_client()
 
-    # Get all secured files with tracking IDs
-    resp = (
-        client.table("files")
-        .select("id, name, url, tracking_id, user_id")
-        .eq("status", "secured")
-        .not_.is_("tracking_id", "null")
-        .execute()
-    )
-    files = resp.data
-    logger.info("Checking %d secured files", len(files))
+    # Crawl all pre-configured domains and scan images for tracking IDs
+    logger.info("Scanning %d pre-configured domains", len(PRE_CONFIGURED_DOMAINS))
+    for domain in PRE_CONFIGURED_DOMAINS:
+        try:
+            page = crawl(domain)
+            for img_url in page["images"]:
+                tracking_id = _download_and_scan(img_url)
+                if not tracking_id:
+                    continue
 
-    for f in files:
-        logger.info("Searching for file %s (%s)", f["id"], f["name"])
-        matches = search_image(f["url"])
-        for m in matches:
-            # Check if already recorded
-            existing = (
-                client.table("scan_results")
-                .select("id")
-                .eq("tracking_id", m["tracking_id"])
-                .eq("matched_url", m["source_url"])
-                .maybe_single()
-                .execute()
-            )
-            if existing.data:
-                logger.info("Match already recorded for %s on %s", m["tracking_id"], m["source_url"])
-                continue
+                file_record = _lookup_file_by_tracking_id(client, tracking_id)
+                if not file_record:
+                    logger.info("No file found for tracking ID %s — skipping", tracking_id)
+                    continue
 
-            impact_summary = _generate_impact_summary(
-                file_name=f.get("name", "Unknown"),
-                source_url=m.get("source_url", ""),
-                page_title=m.get("page_title", ""),
-                site_email=m.get("site_email"),
-                tracking_id=m.get("tracking_id", ""),
-            )
-
-            record = {
-                "tracking_id": m["tracking_id"],
-                "file_id": f["id"],
-                "user_id": f["user_id"],
-                "matched_url": m["source_url"],
-                "matched_image_url": m["matched_image_url"],
-                "page_title": m["page_title"],
-                "site_email": m["site_email"],
-                "impact_summary": impact_summary,
-                "detected_at": datetime.now(timezone.utc).isoformat(),
-            }
-            client.table("scan_results").insert(record).execute()
-            logger.info("Recorded match: %s on %s", m["tracking_id"], m["source_url"])
+                match = {
+                    "tracking_id": tracking_id,
+                    "source_url": domain,
+                    "matched_image_url": img_url,
+                    "page_title": page.get("title", ""),
+                    "site_email": page.get("emails", [None])[0],
+                }
+                _record_match(client, file_record, match)
+        except Exception as e:
+            logger.warning("Error scanning %s: %s", domain, e)
 
     logger.info("Scan complete")
