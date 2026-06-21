@@ -280,16 +280,18 @@ export default function DashboardPage() {
 
       <Link
         href="/dashboard/assets"
-        className="elevated mb-6 sm:mb-8 flex items-center gap-4 rounded-xl border border-subtle p-4 sm:p-5 transition-colors hover:border-zinc-700 group"
+        className="group relative mb-6 sm:mb-8 flex items-center gap-4 overflow-hidden rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/5 to-transparent p-4 sm:p-5 transition-all hover:border-emerald-500/40 hover:from-emerald-500/10"
       >
-        <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border border-dashed border-zinc-600 group-hover:border-zinc-500 transition-colors">
-          <Upload className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
+        <div className="relative flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20 transition-all group-hover:bg-emerald-500/20 group-hover:ring-emerald-500/30">
+          <Upload className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-400" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-primary text-sm font-medium">Register a new asset</p>
-          <p className="text-muted text-xs">Upload product media to start monitoring.</p>
+          <p className="text-primary text-sm sm:text-base font-medium">Register a new asset</p>
+          <p className="text-muted text-xs sm:text-sm mt-0.5">Upload product media to start monitoring.</p>
         </div>
-        <ArrowRight className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 text-emerald-400 transition-all group-hover:border-emerald-500/40 group-hover:bg-emerald-500/10">
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </div>
       </Link>
 
       <div className="surface rounded-xl border border-subtle">
