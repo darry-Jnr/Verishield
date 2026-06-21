@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, LayoutDashboard, FolderKanban, Bell, Scan, LogOut, Menu, X } from 'lucide-react'
+import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SystemStatus from '@/components/system-status'
@@ -10,7 +10,6 @@ import SystemStatus from '@/components/system-status'
 const nav = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: FolderKanban, label: 'Assets', href: '/dashboard/assets' },
-  { icon: Scan, label: 'Scanner', href: '/dashboard/scanner' },
   { icon: Bell, label: 'Alerts', href: '/dashboard/alerts' },
 ]
 

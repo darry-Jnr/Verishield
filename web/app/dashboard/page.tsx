@@ -3,14 +3,22 @@
 import { useState, useEffect, useRef } from 'react'
 import { Upload, ArrowRight, Scan, Square, FolderKanban, Image, CheckCircle2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { getFileStats, getFolders, getRecentFiles, type Folder, type FileRecord } from '@/lib/db'
+import { getFileStats, getFolders, getRecentFiles, getScanResults, type Folder, type FileRecord, type ScanResult } from '@/lib/db'
+
+const DEMO_DOMAINS = [
+  'aliexpress.com',
+  'dhgate.com',
+  'temu.com',
+  'shopify-store.com',
+  'etsy.com',
+]
+
+interface ScanLogEntry {
+  domain: string
+  status: 'checking' | 'clean' | 'match'
+}
 
 function randomBlips(count: number, color: string) {
-  const positions = [
-    'top-1 left-1/3', 'top-1/4 right-2', 'top-1/2 left-1', 'bottom-1/3 right-1/4',
-    'bottom-1 left-1/2', 'top-2 right-1/3', 'left-1/2 bottom-2', 'right-1 top-1/3',
-    'top-1/3 left-2', 'bottom-2 right-1/2', 'right-2 bottom-1/3', 'left-1/3 top-1',
-  ]
   const durations = ['1.2s', '1.8s', '2.2s', '1.5s', '2.5s', '1.0s', '2.0s', '1.6s']
   const blips = []
   for (let i = 0; i < Math.min(count, 8); i++) {
@@ -30,9 +38,11 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ total: 0, processing: 0, secured: 0, failed: 0, threatCount: 0 })
   const [recentFiles, setRecentFiles] = useState<FileRecord[]>([])
   const [scanning, setScanning] = useState(false)
-  const [scanCount, setScanCount] = useState(0)
+  const [scanLog, setScanLog] = useState<ScanLogEntry[]>([])
+  const [scanResults, setScanResults] = useState<ScanResult[]>([])
+  const [scanMessage, setScanMessage] = useState('')
   const [mounted, setMounted] = useState(false)
-  const intervalRef = useRef<number | null>(null)
+  const abortRef = useRef(false)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -53,30 +63,60 @@ export default function DashboardPage() {
 
   useEffect(() => { load() }, [])
 
-  const startScan = () => {
+  const startScan = async () => {
     if (scanning) return
-    setScanning(true)
-    setScanCount(0)
-    let count = 0
-    intervalRef.current = window.setInterval(async () => {
-      count++
-      setScanCount(count)
-      await load()
-      if (count >= 6) {
-        if (intervalRef.current) clearInterval(intervalRef.current)
-        setScanning(false)
-      }
-    }, 3000)
-  }
+    if (stats.secured === 0) {
+      setScanMessage('No secured assets to scan. Upload and stamp media first.')
+      setTimeout(() => setScanMessage(''), 4000)
+      return
+    }
 
-  const stopScan = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current)
+    abortRef.current = false
+    setScanning(true)
+    setScanLog([])
+    setScanResults([])
+    setScanMessage('')
+
+    const log: ScanLogEntry[] = []
+
+    for (const domain of DEMO_DOMAINS) {
+      if (abortRef.current) break
+
+      log.push({ domain, status: 'checking' })
+      setScanLog([...log])
+
+      await new Promise(r => setTimeout(r, 1200 + Math.random() * 800))
+
+      if (abortRef.current) break
+
+      let isMatch = false
+      try {
+        const results = await getScanResults()
+        for (const r of results) {
+          try {
+            if (r.matched_url && new URL(r.matched_url).hostname.replace('www.', '') === domain) {
+              isMatch = true
+              break
+            }
+          } catch {}
+        }
+      } catch {}
+
+      log[log.length - 1].status = isMatch ? 'match' : 'clean'
+      setScanLog([...log])
+    }
+
+    await Promise.all([
+      load(),
+      getScanResults().then(r => setScanResults(r)).catch(() => {}),
+    ])
     setScanning(false)
   }
 
-  useEffect(() => {
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [])
+  const stopScan = () => {
+    abortRef.current = true
+    setScanning(false)
+  }
 
   const radarColor = stats.failed > 0 ? 'bg-red-500' : stats.processing > 0 ? 'bg-orange-500' : 'bg-emerald-500'
   const sweepColor = stats.failed > 0 ? 'from-red-500/40' : stats.processing > 0 ? 'from-orange-500/40' : 'from-emerald-500/40'
@@ -90,7 +130,6 @@ export default function DashboardPage() {
         <p className="text-secondary mt-1 text-sm">Brand intelligence overview</p>
       </div>
 
-      {/* Stats */}
       <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Total Folders', value: String(folders.length), icon: FolderKanban },
@@ -108,45 +147,38 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Scan card with radar */}
       <div className="surface mb-6 rounded-xl border border-subtle overflow-hidden">
         <div className="flex flex-col sm:flex-row">
-          {/* Radar visual */}
           <div className="flex aspect-square w-full sm:w-32 items-center justify-center bg-zinc-900/50 p-6 sm:p-0">
             <div className="relative flex h-20 w-20 items-center justify-center">
-              {/* Rings */}
               <div className="absolute inset-0 rounded-full border border-zinc-700" />
               <div className="absolute inset-2 rounded-full border border-zinc-700" />
               <div className="absolute inset-4 rounded-full border border-zinc-700" />
-              {/* Sweep */}
               <div className="absolute inset-0 overflow-hidden rounded-full">
                 <div className="h-full w-full animate-spin" style={{ animationDuration: '3s' }}>
                   <div className={`mx-auto h-1/2 w-1/2 origin-bottom rounded-tl-full bg-gradient-to-r ${sweepColor} to-transparent`} />
                 </div>
               </div>
-              {/* Center dot */}
               <div className={`relative z-10 h-2.5 w-2.5 rounded-full ${radarColor} ${scanning ? 'animate-pulse' : ''}`} />
-              {/* Blips based on real data */}
               {stats.failed > 0 && randomBlips(stats.failed, 'bg-red-500')}
               {stats.processing > 0 && randomBlips(stats.processing, 'bg-orange-500')}
               {stats.secured > 0 && stats.failed === 0 && stats.processing === 0 && randomBlips(Math.min(stats.secured, 3), 'bg-emerald-500')}
             </div>
           </div>
 
-          {/* Content */}
           <div className="flex flex-1 items-center gap-3 px-4 sm:px-5 py-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-primary text-sm font-medium">
-                  {scanning ? `Scanning... (${scanCount}/6)` : 'Asset Monitoring'}
+                  {scanning ? 'Scanning marketplaces...' : 'Asset Monitoring'}
                 </p>
                 <span className={`h-1.5 w-1.5 rounded-full ${radarColor} ${scanning ? 'animate-pulse' : ''}`} />
               </div>
               <p className="text-xs text-muted mt-1">
-                {scanning
-                  ? `${stats.total} files scanned · ${stats.failed} threats found`
+                {scanMessage || (scanning
+                  ? `Checking ${DEMO_DOMAINS.length} domains for stolen assets`
                   : `${scanLabel} · ${stats.total} files · Last scan ${lastScan}`
-                }
+                )}
               </p>
             </div>
             <button
@@ -167,9 +199,69 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {scanLog.length > 0 && (
+          <div className="border-t border-subtle px-4 sm:px-5 py-3">
+            <div className="space-y-1.5">
+              {scanLog.map((entry, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs font-mono">
+                  {entry.status === 'checking' && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+                  )}
+                  {entry.status === 'clean' && (
+                    <span className="text-emerald-500 shrink-0">&#10003;</span>
+                  )}
+                  {entry.status === 'match' && (
+                    <span className="text-red-500 shrink-0">&#9888;</span>
+                  )}
+                  <span className={`${entry.status === 'checking' ? 'text-amber-400' : entry.status === 'match' ? 'text-red-400' : 'text-secondary'}`}>
+                    {entry.domain}
+                  </span>
+                  {entry.status === 'checking' && (
+                    <span className="text-muted animate-pulse">checking...</span>
+                  )}
+                  {entry.status === 'clean' && (
+                    <span className="text-muted">No matches</span>
+                  )}
+                  {entry.status === 'match' && (
+                    <span className="text-red-500">Match found</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Upload CTA */}
+      {scanResults.length > 0 && !scanning && (
+        <div className="surface mb-6 rounded-xl border border-subtle">
+          <div className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <h2 className="text-primary text-sm font-medium">Scan Results</h2>
+              <span className="flex h-5 items-center rounded-full bg-red-500/10 px-2 text-[11px] font-medium text-red-500">
+                {scanResults.length} {scanResults.length === 1 ? 'match' : 'matches'}
+              </span>
+            </div>
+          </div>
+          {scanResults.map((r) => (
+            <div key={r.id} className="border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
+              <div className="flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-primary text-sm truncate">
+                    {r.matched_url ? new URL(r.matched_url).hostname : 'Unknown'}
+                  </p>
+                  <p className="text-muted text-xs truncate mt-0.5">{r.matched_url}</p>
+                </div>
+                <span className="text-muted text-xs shrink-0">
+                  {new Date(r.detected_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <Link
         href="/dashboard/assets"
         className="elevated mb-6 sm:mb-8 flex items-center gap-4 rounded-xl border border-subtle p-4 sm:p-5 transition-colors hover:border-zinc-700 group"
@@ -184,7 +276,6 @@ export default function DashboardPage() {
         <ArrowRight className="h-4 w-4 text-muted group-hover:text-primary transition-colors" />
       </Link>
 
-      {/* Recent Activity */}
       <div className="surface rounded-xl border border-subtle">
         <div className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3">
           <div className="flex items-center gap-2">
@@ -202,7 +293,6 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
-            {/* Recent files */}
             {recentFiles.map((f) => (
               <div key={f.id} className="flex items-center justify-between border-b border-subtle px-4 sm:px-5 py-3.5 last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
