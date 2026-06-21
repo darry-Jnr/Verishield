@@ -114,8 +114,8 @@ export default function DashboardPage() {
 
     log.push({
       domain: threatMatchCount > 0
-        ? `${threatMatchCount} threat${threatMatchCount > 1 ? 's' : ''} detected across ${DEMO_DOMAINS.length} domains`
-        : `All clear — no threats found across ${DEMO_DOMAINS.length} domains`,
+        ? `${threatMatchCount} threat${threatMatchCount > 1 ? 's' : ''} detected`
+        : 'No threats found',
       status: 'done',
     })
     setScanLog([...log])
@@ -223,8 +223,9 @@ export default function DashboardPage() {
                     if (e.status === 'done') {
                       const isThreat = e.domain.includes('threat')
                       return (
-                        <span className={isThreat ? 'text-red-500' : 'text-emerald-500'}>
-                          {isThreat ? '&#9888;' : '&#10003;'} {e.domain}
+                        <span className={`flex items-center gap-1.5 ${isThreat ? 'text-red-500' : 'text-emerald-500'}`}>
+                          {isThreat ? <AlertTriangle className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                          <span className="font-medium">{e.domain}</span>
                         </span>
                       )
                     }
