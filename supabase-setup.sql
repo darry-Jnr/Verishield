@@ -61,6 +61,10 @@ create policy "Service key can manage incidents"
   using (true)
   with check (true);
 
+-- Add category and price to folders
+alter table folders add column if not exists category text;
+alter table folders add column if not exists price numeric;
+
 -- Add columns to the files table
 alter table files add column if not exists url text;
 alter table files add column if not exists storage_path text;

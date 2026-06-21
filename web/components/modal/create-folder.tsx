@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, FolderPlus, Check, Loader2 } from 'lucide-react'
+import { X, FolderPlus, Check, Loader2, DollarSign } from 'lucide-react'
 import { createFolder } from '@/lib/db'
 
 interface CreateFolderModalProps {
@@ -13,9 +13,8 @@ interface CreateFolderModalProps {
 export default function CreateFolderModal({ open, onClose, onCreate }: CreateFolderModalProps) {
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [description, setDescription] = useState('')
-  const [brand, setBrand] = useState('')
-  const [campaign, setCampaign] = useState('')
+  const [category, setCategory] = useState('')
+  const [price, setPrice] = useState('')
   const [busy, setBusy] = useState(false)
 
   if (!open) return null
@@ -24,12 +23,16 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
     if (!title) return
     setBusy(true)
     try {
-      await createFolder(title, date, description, brand || undefined, campaign || undefined)
+      await createFolder(
+        title,
+        date,
+        category || undefined,
+        category === 'Product' && price ? parseFloat(price) : undefined,
+      )
       setTitle('')
       setDate(new Date().toISOString().split('T')[0])
-      setDescription('')
-      setBrand('')
-      setCampaign('')
+      setCategory('')
+      setPrice('')
       onCreate?.()
       onClose()
     } finally {
@@ -40,9 +43,8 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
   const handleCancel = () => {
     setTitle('')
     setDate(new Date().toISOString().split('T')[0])
-    setDescription('')
-    setBrand('')
-    setCampaign('')
+    setCategory('')
+    setPrice('')
     onClose()
   }
 
@@ -86,41 +88,38 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
 
           <div>
             <label className="text-muted mb-1.5 block text-xs">
-              Description <span className="text-muted/50">(optional)</span>
+              Category <span className="text-muted/50">(optional)</span>
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder="Any notes about this folder..."
-              className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors resize-none"
-            />
+            <select
+              value={category}
+              onChange={(e) => { setCategory(e.target.value); if (e.target.value !== 'Product') setPrice('') }}
+              className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary outline-none focus:border-zinc-600 transition-colors appearance-none"
+            >
+              <option value="">None</option>
+              <option value="Video">Video — for content creators / ads</option>
+              <option value="Product">Product — for ecommerce</option>
+            </select>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
+          {category === 'Product' && (
+            <div>
               <label className="text-muted mb-1.5 block text-xs">
-                Brand <span className="text-muted/50">(optional)</span>
+                Price <span className="text-muted/50">(optional)</span>
               </label>
-              <input
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                placeholder="e.g. Nike"
-                className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
-              />
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="0.00"
+                  className="elevated w-full rounded-lg border border-subtle pl-9 pr-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <label className="text-muted mb-1.5 block text-xs">
-                Campaign <span className="text-muted/50">(optional)</span>
-              </label>
-              <input
-                value={campaign}
-                onChange={(e) => setCampaign(e.target.value)}
-                placeholder="e.g. Summer 2026"
-                className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between border-t border-subtle px-6 py-4">

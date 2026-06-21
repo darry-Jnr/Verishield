@@ -91,14 +91,18 @@ export default function AssetDetailPage() {
               <Calendar className="h-3.5 w-3.5" />
               {folder.date}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5" />
-              {folder.brand || '—'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Folder className="h-3.5 w-3.5" />
-              {folder.campaign || '—'}
-            </span>
+            {folder.category && (
+              <span className="flex items-center gap-1.5">
+                <Folder className="h-3.5 w-3.5" />
+                {folder.category}
+              </span>
+            )}
+            {folder.category === 'Product' && folder.price != null && (
+              <span className="flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5" />
+                ${folder.price.toFixed(2)}
+              </span>
+            )}
             <span className="text-muted/50">{files.length} file{files.length !== 1 ? 's' : ''}</span>
           </div>
 

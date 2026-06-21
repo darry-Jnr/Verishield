@@ -7,6 +7,8 @@ export interface Folder {
   description: string | null
   brand: string
   campaign: string
+  category: string | null
+  price: number | null
   status: string
   thumb: string
   created_at: string
@@ -51,7 +53,7 @@ export async function getFolders() {
   return data as Folder[]
 }
 
-export async function createFolder(name: string, date: string, description: string, brand?: string, campaign?: string) {
+export async function createFolder(name: string, date: string, category?: string, price?: number) {
   const { data: user } = await supabase.auth.getUser()
   const userId = user.user?.id
   if (!userId) throw new Error('Not authenticated')
@@ -64,7 +66,7 @@ export async function createFolder(name: string, date: string, description: stri
 
   const { data, error } = await supabase
     .from('folders')
-    .insert({ name, date, description, brand, campaign, thumb, user_id: userId })
+    .insert({ name, date, category: category || null, price: price || null, thumb, user_id: userId })
     .select()
     .single()
 

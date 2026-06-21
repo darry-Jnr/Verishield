@@ -174,8 +174,10 @@ export default function AssetsPage() {
                   }`}>{f.status}</span>
                 </div>
                   <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
-                    {f.brand && <span>{f.brand}</span>}
-                    {f.campaign && <><span className="opacity-30">·</span><span>{f.campaign}</span></>}
+                    {f.category && <span>{f.category}</span>}
+                    {f.category === 'Product' && f.price != null && (
+                      <><span className="opacity-30">·</span><span>${f.price.toFixed(2)}</span></>
+                    )}
                   </div>
                   <div className="mt-1 flex items-center justify-between">
                   <span className="text-muted text-xs">{f.date}</span>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { X, Download, Pencil, Trash2, Image, Film, FileText, Check, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Download, Pencil, Trash2, Image, Film, FileText, Check, Loader2, ChevronLeft, ChevronRight, Brain, Zap, Moon } from 'lucide-react'
 import { type FileRecord, renameFile, deleteFile } from '@/lib/db'
 
 interface FileDetailModalProps {
@@ -79,6 +79,55 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
     }
   }
 
+  // Auto-download helper that drops the file directly into the browser tray instead of rendering it as code text
+  const triggerAutoDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      // Fallback if browser security rules reject the proxy fetch
+      window.open(url, '_blank')
+    }
+  }
+
+  // Dynamic system component UI styling based on current secure tracking workflow states
+  const renderAIStatusWidget = () => {
+    if (file.status === 'secured') {
+      return (
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5">
+          <div className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </div>
+          <Brain className="h-4 w-4 text-emerald-400" />
+          <span className="text-emerald-400 font-medium text-xs">AuraGuard Secure Loop Active</span>
+        </div>
+      )
+    }
+    if (file.status === 'processing') {
+      return (
+        <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2.5">
+          <Loader2 className="h-4 w-4 text-amber-400 animate-spin" />
+          <span className="text-amber-400 font-medium text-xs">AI Worker Stamping Metadata...</span>
+        </div>
+      )
+    }
+    return (
+      <div className="flex items-center gap-2 rounded-xl bg-zinc-500/10 border border-zinc-500/20 px-3 py-2.5">
+        <Moon className="h-4 w-4 text-zinc-400" />
+        <span className="text-zinc-400 font-medium text-xs">Engine Engine Idle / Sleep</span>
+      </div>
+    )
+  }
+
   if (file.type === 'image') {
     const hasPrev = currentIndex > 0
     const hasNext = currentIndex < imageFiles.length - 1
@@ -109,7 +158,10 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
                   </button>
                 </div>
               ) : (
-                <p className="text-primary text-sm font-medium truncate max-w-[200px] sm:max-w-sm">{file.name}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <p className="text-primary text-sm font-medium truncate max-w-[200px] sm:max-w-xs">{file.name}</p>
+                  {renderAIStatusWidget()}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-3">
@@ -185,15 +237,13 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
                   Rename
                 </button>
               )}
-              <a
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary text-xs"
+              <button
+                onClick={() => triggerAutoDownload(file.url, file.name)}
+                className="btn-primary text-xs flex items-center gap-1.5"
               >
                 <Download className="h-3.5 w-3.5" />
                 Download
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -212,7 +262,10 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="surface w-full max-w-lg rounded-2xl border border-subtle shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 pt-4 pb-3 border-b border-subtle">
-          <span className="text-primary font-medium">File Details</span>
+          <div className="flex items-center gap-3">
+            <span className="text-primary font-medium">File Details</span>
+            {renderAIStatusWidget()}
+          </div>
           <button onClick={onClose} className="text-muted hover:text-primary transition-colors">
             <X className="h-5 w-5" />
           </button>
@@ -293,10 +346,13 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
                 Rename
               </button>
             )}
-            <a href={file.url} target="_blank" rel="noopener noreferrer" className="btn-primary text-xs">
+            <button 
+              onClick={() => triggerAutoDownload(file.url, file.name)} 
+              className="btn-primary text-xs flex items-center gap-1.5"
+            >
               <Download className="h-3.5 w-3.5" />
               Download
-            </a>
+            </button>
           </div>
         </div>
       </div>
