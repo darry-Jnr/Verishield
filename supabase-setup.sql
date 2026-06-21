@@ -37,6 +37,30 @@ create policy "Service key can upsert service heartbeat"
   using (true)
   with check (true);
 
+-- System incidents log
+create table if not exists system_incidents (
+  id bigint generated always as identity primary key,
+  service_name text not null,
+  title text not null,
+  description text,
+  status text not null default 'resolved',
+  severity text not null default 'minor',
+  created_at timestamptz not null default now(),
+  resolved_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+alter table system_incidents enable row level security;
+
+create policy "Authenticated users can read incidents"
+  on system_incidents for select
+  using (auth.role() = 'authenticated');
+
+create policy "Service key can manage incidents"
+  on system_incidents for all
+  using (true)
+  with check (true);
+
 -- Add columns to the files table
 alter table files add column if not exists url text;
 alter table files add column if not exists storage_path text;
