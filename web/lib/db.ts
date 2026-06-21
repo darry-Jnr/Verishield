@@ -51,7 +51,7 @@ export async function getFolders() {
   return data as Folder[]
 }
 
-export async function createFolder(name: string, date: string, description: string) {
+export async function createFolder(name: string, date: string, description: string, brand?: string, campaign?: string) {
   const { data: user } = await supabase.auth.getUser()
   const userId = user.user?.id
   if (!userId) throw new Error('Not authenticated')
@@ -64,7 +64,7 @@ export async function createFolder(name: string, date: string, description: stri
 
   const { data, error } = await supabase
     .from('folders')
-    .insert({ name, date, description, thumb, user_id: userId })
+    .insert({ name, date, description, brand, campaign, thumb, user_id: userId })
     .select()
     .single()
 

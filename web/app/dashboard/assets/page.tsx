@@ -173,7 +173,11 @@ export default function AssetsPage() {
                     f.status === 'active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-zinc-800'
                   }`}>{f.status}</span>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
+                  <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
+                    {f.brand && <span>{f.brand}</span>}
+                    {f.campaign && <><span className="opacity-30">·</span><span>{f.campaign}</span></>}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
                   <span className="text-muted text-xs">{f.date}</span>
                 </div>
               </div>

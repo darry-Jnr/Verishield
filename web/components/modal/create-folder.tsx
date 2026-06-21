@@ -14,6 +14,8 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [description, setDescription] = useState('')
+  const [brand, setBrand] = useState('')
+  const [campaign, setCampaign] = useState('')
   const [busy, setBusy] = useState(false)
 
   if (!open) return null
@@ -22,10 +24,12 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
     if (!title) return
     setBusy(true)
     try {
-      await createFolder(title, date, description)
+      await createFolder(title, date, description, brand || undefined, campaign || undefined)
       setTitle('')
       setDate(new Date().toISOString().split('T')[0])
       setDescription('')
+      setBrand('')
+      setCampaign('')
       onCreate?.()
       onClose()
     } finally {
@@ -37,6 +41,8 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
     setTitle('')
     setDate(new Date().toISOString().split('T')[0])
     setDescription('')
+    setBrand('')
+    setCampaign('')
     onClose()
   }
 
@@ -89,6 +95,31 @@ export default function CreateFolderModal({ open, onClose, onCreate }: CreateFol
               placeholder="Any notes about this folder..."
               className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors resize-none"
             />
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-muted mb-1.5 block text-xs">
+                Brand <span className="text-muted/50">(optional)</span>
+              </label>
+              <input
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                placeholder="e.g. Nike"
+                className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-muted mb-1.5 block text-xs">
+                Campaign <span className="text-muted/50">(optional)</span>
+              </label>
+              <input
+                value={campaign}
+                onChange={(e) => setCampaign(e.target.value)}
+                placeholder="e.g. Summer 2026"
+                className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
           </div>
         </div>
 
