@@ -18,6 +18,7 @@ IMAGE_QUALITY = 85
 
 PRE_CONFIGURED_DOMAINS = [
     "http://localhost:8000",
+    "https://test-shop.up.railway.app",
     # Add more sites to scan here
     # e.g. "https://suspicious-store.com"
 ]

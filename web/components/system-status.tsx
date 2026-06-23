@@ -36,7 +36,7 @@ export default function SystemStatus() {
     return () => clearInterval(interval)
   }, [])
 
-  if (checking) return null
+  if (checking) return null   
 
   return (
     <div className="flex w-full items-center gap-2.5 border-t border-subtle px-4 py-2.5">

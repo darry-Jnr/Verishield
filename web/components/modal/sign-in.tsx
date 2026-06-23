@@ -14,8 +14,11 @@ export default function SignIn({ open, onClose }: SignInProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [email, setEmail] = useState('auraguard@gmail.com')
-  const [password, setPassword] = useState('hackaton2026')
+  // const [email, setEmail] = useState('auraguard@gmail.com')
+  // const [password, setPassword] = useState('hackaton2026')
+
+  const [email, setEmail] = useState('hackaton@gmail.com')
+  const [password, setPassword] = useState('hackaton123')
   const [showPassword, setShowPassword] = useState(false)
 
   if (!open) return null
