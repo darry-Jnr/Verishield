@@ -51,6 +51,17 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
+  const waitForSecured = async (folderId: number, retries = 30): Promise<void> => {
+    const { getFiles } = await import('@/lib/db')
+    for (let i = 0; i < retries; i++) {
+      await new Promise((r) => setTimeout(r, 2000))
+      const files = await getFiles(folderId)
+      if (files.length > 0 && files.every((f) => f.status !== 'processing')) return
+      setStatusMessage(`Stamping asset${i < 3 ? '...' : '... still working'}`)
+    }
+    setStatusMessage('Stamping complete')
+  }
+
   const handleRegister = async () => {
     if (!folderId || files.length === 0) return
     setBusy(true)
@@ -65,15 +76,14 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
           size: (f.size / 1024 / 1024).toFixed(2) + ' MB',
         })),
       )
-      setStatusMessage(`Uploaded — stamping in progress`)
-      setTimeout(() => {
-        setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
-        setFiles([])
-        setStep('files')
-        setStatusMessage('')
-        onUpload?.()
-        onClose()
-      }, 1500)
+      setStatusMessage('Uploaded — waiting for Forge to stamp...')
+      await waitForSecured(folderId)
+      setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
+      setFiles([])
+      setStep('files')
+      setStatusMessage('')
+      onUpload?.()
+      onClose()
     } catch (e) {
       console.error(e)
       setStatusMessage('Upload failed. Try again.')

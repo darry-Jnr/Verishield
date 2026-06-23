@@ -5,3 +5,4 @@ engine/.env
 __pycache__/
 test-shop/.env
 test-shop/.venv/
+engine/.venv/

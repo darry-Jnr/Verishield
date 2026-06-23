@@ -62,7 +62,9 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
     if (!newName.trim()) return
     setBusy(true)
     try {
-      await renameFile(file.id, newName.trim())
+      const ext = file.name.match(/\.[^.]+$/)?.[0] || ''
+      const finalName = newName.trim().endsWith(ext) ? newName.trim() : newName.trim() + ext
+      await renameFile(file.id, finalName)
       setRenaming(false)
       onRenamed()
     } finally {
@@ -84,12 +86,18 @@ export default function FileDetailModal({ open, file, files, onClose, onDeleted,
   // Auto-download helper that drops the file directly into the browser tray instead of rendering it as code text
   const triggerAutoDownload = async (url: string, filename: string) => {
     try {
+      const extFromUrl = url.match(/\.([^.?#]+)(?:[?#]|$)/)?.[1] || ''
+      const finalName = filename.match(/\.[^.]+$/)
+        ? filename
+        : extFromUrl
+          ? filename + '.' + extFromUrl
+          : filename
       const response = await fetch(url)
       const blob = await response.blob()
       const blobUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = blobUrl
-      link.setAttribute('download', filename)
+      link.setAttribute('download', finalName)
       document.body.appendChild(link)
       link.click()
       link.remove()

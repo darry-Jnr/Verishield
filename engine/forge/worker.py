@@ -1,9 +1,16 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import time
 import uuid
 import logging
 import tempfile
 import os
 import traceback
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from config import SUPABASE_URL, SUPABASE_ANON_KEY, POLL_INTERVAL, TRACKING_ID_PREFIX, STORAGE_BUCKET
 from db import get_client, get_processing_files, mark_as_secured, mark_as_failed, record_heartbeat
@@ -26,6 +33,22 @@ def get_stamper(file_type: str):
     return None
 
 
+MIME_MAP = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
+    ".avi": "video/x-msvideo",
+    ".pdf": "application/pdf",
+}
+
+def _content_type(file_record: dict) -> str:
+    _, ext = os.path.splitext(file_record.get("name", ""))
+    return MIME_MAP.get(ext.lower(), "application/octet-stream")
+
+
 def process_file(client, file_record: dict) -> None:
     file_id = file_record["id"]
     file_type = file_record.get("type", "")
@@ -42,6 +65,7 @@ def process_file(client, file_record: dict) -> None:
     _, ext = os.path.splitext(file_record.get("name", ""))
     tmp_original = os.path.join(tempfile.gettempdir(), f"orig_{file_id}{ext}")
     stamped_path = None
+    ctype = _content_type(file_record)
     try:
         logger.info("Downloading via Supabase client: media/%s", storage_path)
         data = client.storage.from_(STORAGE_BUCKET).download(storage_path)
@@ -65,7 +89,7 @@ def process_file(client, file_record: dict) -> None:
                 client.storage.from_(STORAGE_BUCKET).update(
                     storage_path,
                     f,
-                    file_options={"content-disposition": "attachment"},
+                    file_options={"content-type": ctype, "content-disposition": "inline"},
                 )
             mark_as_secured(client, file_id, tracking_id)
             return
@@ -78,7 +102,7 @@ def process_file(client, file_record: dict) -> None:
             client.storage.from_(STORAGE_BUCKET).update(
                 storage_path,
                 f,
-                file_options={"content-disposition": "attachment"},
+                file_options={"content-type": ctype, "content-disposition": "inline"},
             )
 
         mark_as_secured(client, file_id, tracking_id)
@@ -115,5 +139,19 @@ def main_loop():
         time.sleep(POLL_INTERVAL)
 
 
+class _HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+    def log_message(self, *a): pass
+
+def _start_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), _HealthHandler)
+    server.serve_forever()
+
 if __name__ == "__main__":
+    threading.Thread(target=_start_health_server, daemon=True).start()
+    logger.info("Health server started")
     main_loop()

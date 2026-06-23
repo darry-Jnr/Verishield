@@ -18,7 +18,8 @@ export async function scanBuffer(buffer: ArrayBuffer): Promise<string | null> {
     const tags = exifReader.load(buffer)
     const userComment = (tags as any)['UserComment']?.value
     if (!userComment) return null
-    return parseTrackingId(String(userComment))
+    const text = new TextDecoder().decode(new Uint8Array(userComment))
+    return parseTrackingId(text)
   } catch {
     return null
   }

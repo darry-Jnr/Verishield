@@ -27,8 +27,76 @@ def get_client() -> Client:
 @app.get("/")
 async def index():
     import pathlib
-    html = pathlib.Path(__file__).parent / "index.html"
-    return HTMLResponse(html.read_text())
+    html = (pathlib.Path(__file__).parent / "index.html").read_text()
+
+    try:
+        client = get_client()
+        items = (
+            client.schema("shop")
+            .table("items")
+            .select("*")
+            .order("created_at", desc=True)
+            .execute()
+        ).data
+    except Exception:
+        items = []
+
+    cards = ""
+
+    for item in items:
+        is_video = bool(item.get("video_url"))
+        src = item.get("video_url") or item.get("image_url") or ""
+        media = (
+            f'<video class="card-img" muted loop playsinline><source src="{src}" type="video/mp4"></video>'
+            if is_video
+            else f'<img class="card-img" src="{src}" alt="{item["title"]}" loading="lazy">'
+        )
+        desc = f"<p>{item['description']}</p>" if item.get("description") else ""
+        cards += f"""
+      <div class="card">
+        {media}
+        <div class="card-body">
+          <h3>{item['title']}</h3>
+          <div class="price">${float(item['price']):.2f}</div>
+          {desc}
+          <div class="meta">ID: {item['id']}</div>
+        </div>
+      </div>"""
+
+    try:
+        secured = (
+            client.from_("files")
+            .select("name, url, type, tracking_id, created_at")
+            .eq("status", "secured")
+            .order("created_at", desc=True)
+            .limit(20)
+            .execute()
+        ).data
+        for f in secured:
+            is_video = f["type"] == "video"
+            src = f["url"]
+            media = (
+                f'<video class="card-img" muted loop playsinline><source src="{src}" type="video/mp4"></video>'
+                if is_video
+                else f'<img class="card-img" src="{src}" alt="{f["name"]}" loading="lazy">'
+            )
+            title = f["name"].rsplit(".", 1)[0] if "." in f["name"] else f["name"]
+            tid = f["tracking_id"] or ""
+            cards += f"""
+      <div class="card">
+        {media}
+        <div class="card-body">
+          <h3>{title}</h3>
+          <div class="price">$0.00</div>
+          <p style="font-size:11px;color:#999;font-family:monospace">{tid}</p>
+          <div class="meta">Secured asset</div>
+        </div>
+      </div>"""
+    except Exception:
+        pass
+
+    html = html.replace("<!-- SSR_ITEMS -->", cards)
+    return HTMLResponse(html)
 
 
 class ShopItem(BaseModel):
