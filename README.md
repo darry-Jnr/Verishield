@@ -6,7 +6,7 @@ Three services work together:
 
 1. **Web** — dashboard for uploading assets, triggering scans, and reviewing alerts
 2. **Forge** — automatically watermarks each upload with a unique tracking ID embedded in metadata
-3. **Test Shop** — a fake storefront used to verify the scanner works end-to-end
+3. **Test Shop** — a test storefront used to verify the scanner works end-to-end
 
 ### Workflow
 
