@@ -75,22 +75,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <SystemStatus />
-        <div className="border-t border-subtle px-4 py-4">
-          <div className="flex items-center gap-3">
+        {userEmail ? (
+          <button onClick={handleSignOut} className="flex w-full items-center gap-3 border-t border-subtle px-4 py-4 hover:bg-elevated transition-colors cursor-pointer text-left">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">
-              {userEmail ? userEmail[0].toUpperCase() : 'G'}
+              {userEmail[0].toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-primary truncate text-xs font-medium">{userEmail ?? 'Guest'}</p>
-              <p className="text-muted truncate text-[11px]">{userEmail ? 'Signed in' : 'Not signed in'}</p>
+              <p className="text-primary truncate text-xs font-medium">{userEmail}</p>
+              <p className="text-muted truncate text-[11px]">Signed in</p>
             </div>
-            {userEmail && (
-              <button onClick={handleSignOut} className="text-muted hover:text-primary cursor-pointer transition-colors">
-                <LogOut className="h-4 w-4 shrink-0" />
-              </button>
-            )}
+            <LogOut className="h-4 w-4 shrink-0 text-muted" />
+          </button>
+        ) : (
+          <div className="border-t border-subtle px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">
+                G
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-primary truncate text-xs font-medium">Guest</p>
+                <p className="text-muted truncate text-[11px]">Not signed in</p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </aside>
 
       {/* Main */}

@@ -152,3 +152,8 @@ samp,
 .border-threat-safe {
   border-color: rgba(16, 185, 129, 0.2);
 }
+
+/* ── Global button cursor ── */
+button:not(:disabled) {
+  cursor: pointer;
+}
