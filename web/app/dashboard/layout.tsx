@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
-import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X } from 'lucide-react'
+import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X, MoreVertical } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SystemStatus from '@/components/system-status'
@@ -19,6 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const queryClient = useQueryClient()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -33,7 +35,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
   const handleSignOut = async () => {
+    setMenuOpen(false)
     await supabase.auth.signOut()
     queryClient.clear()
     router.push('/')
@@ -76,16 +89,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <SystemStatus />
         {userEmail ? (
-          <button onClick={handleSignOut} className="flex w-full items-center gap-3 border-t border-subtle px-4 py-4 hover:bg-elevated transition-colors cursor-pointer text-left">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">
-              {userEmail[0].toUpperCase()}
+          <div className="border-t border-subtle px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs text-primary font-medium">
+                {userEmail[0].toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-primary truncate text-xs font-medium">{userEmail}</p>
+                <p className="text-muted truncate text-[11px]">Signed in</p>
+              </div>
+              <div ref={menuRef} className="relative">
+                <button onClick={() => setMenuOpen(!menuOpen)} className="text-muted hover:text-primary transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute bottom-full right-0 mb-2 w-44 rounded-lg border border-subtle bg-surface py-1 shadow-xl">
+                    <button onClick={handleSignOut} className="flex w-full items-center gap-2.5 px-3.5 py-2 text-sm text-red-400 hover:bg-zinc-800 transition-colors">
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-primary truncate text-xs font-medium">{userEmail}</p>
-              <p className="text-muted truncate text-[11px]">Signed in</p>
-            </div>
-            <LogOut className="h-4 w-4 shrink-0 text-muted" />
-          </button>
+          </div>
         ) : (
           <div className="border-t border-subtle px-4 py-4">
             <div className="flex items-center gap-3">
