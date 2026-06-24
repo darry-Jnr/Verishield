@@ -9,13 +9,11 @@ import CreateFolderModal from '@/components/modal/create-folder'
 import { getFolders, type Folder } from '@/lib/db'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-const statusPills = ['All', 'Active', 'Archived'] as const
 const sortOptions = ['Recent', 'Oldest'] as const
 
 export default function AssetsPage() {
   const queryClient = useQueryClient()
   const [view, setView] = useState<'grid' | 'list'>('grid')
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Archived'>('All')
   const [sort, setSort] = useState<'Recent' | 'Oldest'>('Recent')
   const [yearFilter, setYearFilter] = useState('All')
   const [showCreate, setShowCreate] = useState(false)
@@ -28,10 +26,6 @@ export default function AssetsPage() {
   const filtered = useMemo(() => {
     let result = [...folders]
 
-    if (statusFilter !== 'All') {
-      result = result.filter((f) => f.status === statusFilter.toLowerCase())
-    }
-
     if (yearFilter !== 'All') {
       result = result.filter((f) => f.date.startsWith(yearFilter))
     }
@@ -42,7 +36,7 @@ export default function AssetsPage() {
     })
 
     return result
-  }, [folders, statusFilter, yearFilter, sort])
+  }, [folders, yearFilter, sort])
 
   return (
     <div className="p-4 sm:p-8">
@@ -59,20 +53,6 @@ export default function AssetsPage() {
 
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="elevated flex items-center gap-1 rounded-lg border border-subtle p-1">
-            {statusPills.map((p) => (
-              <button
-                key={p}
-                onClick={() => setStatusFilter(p)}
-                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  statusFilter === p ? 'bg-zinc-800 text-primary' : 'text-muted hover:text-secondary'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-
           <div className="elevated relative flex items-center gap-1.5 rounded-lg border border-subtle px-3 py-1.5 text-xs text-muted cursor-pointer hover:text-secondary transition-colors">
             <select
               value={yearFilter}
@@ -175,9 +155,6 @@ export default function AssetsPage() {
                     <div className="min-w-0">
                       <p className="text-primary text-sm font-medium truncate">{stripExt(f.name)}</p>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      f.status === 'active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-zinc-800'
-                    }`}>{f.status}</span>
                   </div>
                     <div className="mt-2 flex items-center gap-2 text-[11px] text-muted">
                       {f.category && <span>{f.category}</span>}
@@ -209,22 +186,18 @@ export default function AssetsPage() {
                       <p className="text-primary text-sm truncate">{stripExt(f.name)}</p>
                       <p className="text-muted text-xs mt-0.5">{f.date}</p>
                     </div>
-                    <span className={`shrink-0 self-start rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      f.status === 'active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-muted bg-zinc-800'
-                    }`}>{f.status}</span>
                   </div>
                 </Link>
               ))}
             </div>
 
             <div className="hidden sm:block surface rounded-xl border border-subtle overflow-x-auto">
-              <div className="grid grid-cols-[1fr_120px_120px] gap-4 border-b border-subtle px-5 py-3 text-xs text-muted min-w-[500px]">
+              <div className="grid grid-cols-[1fr_120px] gap-4 border-b border-subtle px-5 py-3 text-xs text-muted min-w-[400px]">
                 <span>Folder</span>
-                <span className="text-center">Status</span>
                 <span className="text-right">Date</span>
               </div>
               {filtered.map((f) => (
-                <Link key={f.id} href={`/dashboard/assets/${f.id}`} className="grid grid-cols-[1fr_120px_120px] gap-4 border-b border-subtle px-5 py-3.5 last:border-0 items-center min-w-[500px] hover:bg-zinc-900/50 transition-colors">
+                <Link key={f.id} href={`/dashboard/assets/${f.id}`} className="grid grid-cols-[1fr_120px] gap-4 border-b border-subtle px-5 py-3.5 last:border-0 items-center min-w-[400px] hover:bg-zinc-900/50 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="elevated flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
                       <svg className="h-4 w-4 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -233,9 +206,6 @@ export default function AssetsPage() {
                     </div>
                     <p className="text-primary text-sm truncate">{stripExt(f.name)}</p>
                   </div>
-                  <span className={`text-center text-xs font-medium ${
-                    f.status === 'active' ? 'text-emerald-500' : 'text-muted'
-                  }`}>{f.status}</span>
                   <span className="text-muted text-xs text-right">{f.date}</span>
                 </Link>
               ))}
