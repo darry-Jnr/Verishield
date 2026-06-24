@@ -3,5 +3,5 @@ export const config = {
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY || '',
   groqApiKey: process.env.GROQ_API_KEY || '',
   trackingIdPrefix: 'AG',
-  preConfiguredDomains: ['https://your-test-shop.railway.app'],
+  preConfiguredDomains: ['http://localhost:8000', 'https://test-shop.up.railway.app'],
 } as const
