@@ -113,8 +113,7 @@ export default function AssetDetailPage() {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all" />
                         <a
                           href={f.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          download={f.name}
                           className="absolute bottom-3 right-3 text-white/0 group-hover:text-white/90 transition-all p-1.5 hover:scale-110 z-10"
                           onClick={(e) => e.stopPropagation()}
                         >
