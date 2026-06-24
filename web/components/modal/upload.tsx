@@ -20,19 +20,11 @@ const fileIcons: Record<string, typeof Image> = {
 }
 
 export default function UploadModal({ open, onClose, onUpload, folderId }: UploadModalProps) {
-  const [step, setStep] = useState<'files' | 'details' | 'review'>('files')
+  const [step, setStep] = useState<'files' | 'review'>('files')
   const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
   const [busy, setBusy] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
-
-  const [form, setForm] = useState({
-    productName: '',
-    brand: '',
-    category: '',
-    campaign: '',
-    description: '',
-  })
 
   if (!open) return null
 
@@ -47,9 +39,6 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
   }
 
   const removeFile = (i: number) => setFiles((prev) => prev.filter((_, idx) => idx !== i))
-
-  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((prev) => ({ ...prev, [key]: e.target.value }))
 
   const waitForSecured = async (folderId: number, retries = 30): Promise<void> => {
     const { getFiles } = await import('@/lib/db')
@@ -78,7 +67,6 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
       )
       setStatusMessage('Uploaded — waiting for Forge to stamp...')
       await waitForSecured(folderId)
-      setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
       setFiles([])
       setStep('files')
       setStatusMessage('')
@@ -93,7 +81,6 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
   }
 
   const reset = () => {
-    setForm({ productName: '', brand: '', category: '', campaign: '', description: '' })
     setFiles([])
     setStep('files')
     onClose()
@@ -103,7 +90,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="surface w-full max-w-xl rounded-2xl border border-subtle shadow-2xl overflow-hidden">
         <div className="flex items-center gap-1.5 border-b border-subtle px-6 pt-4 pb-3">
-          {(['files', 'details', 'review'] as const).map((s, i) => (
+          {(['files', 'review'] as const).map((s, i) => (
             <div key={s} className="flex items-center gap-1.5">
               <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-medium transition-colors ${
                 step === s ? 'bg-white text-black ring-1 ring-white/20' : 'bg-zinc-800 text-muted'
@@ -113,7 +100,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
               <span className={`text-xs capitalize ${step === s ? 'text-primary font-medium' : 'text-muted'}`}>
                 {s === 'files' ? 'Media' : s}
               </span>
-              {i < 2 && <span className="text-muted/30 mx-1 text-xs">—</span>}
+              {i < 1 && <span className="text-muted/30 mx-1 text-xs">—</span>}
             </div>
           ))}
         </div>
@@ -181,95 +168,8 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
               <div className="mt-8 flex items-center justify-between">
                 <button onClick={reset} className="btn-inverted text-sm">Cancel</button>
                 <button
-                  onClick={() => setStep('details')}
-                  disabled={files.length === 0}
-                  className="btn-primary text-sm disabled:opacity-40"
-                >
-                  Continue — Add Details
-                </button>
-              </div>
-            </>
-          )}
-
-          {step === 'details' && (
-            <>
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-primary text-lg font-medium">Asset Details</h2>
-                  <p className="text-muted mt-0.5 text-sm">Describe this product media.</p>
-                </div>
-                <button onClick={reset} className="text-muted hover:text-primary transition-colors">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-muted mb-1.5 block text-xs">Product Name</label>
-                    <input
-                      value={form.productName}
-                      onChange={update('productName')}
-                      placeholder="e.g. Summer Collection Hero Shot"
-                      className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-muted mb-1.5 block text-xs">Brand</label>
-                    <input
-                      value={form.brand}
-                      onChange={update('brand')}
-                      placeholder="e.g. Nike, Acme Brands"
-                      className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-muted mb-1.5 block text-xs">Category</label>
-                    <select
-                      value={form.category}
-                      onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                      className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-secondary outline-none focus:border-zinc-600 transition-colors appearance-none"
-                    >
-                      <option value="" disabled>Select category</option>
-                      <option value="hero">Hero Image</option>
-                      <option value="lookbook">Lookbook</option>
-                      <option value="campaign">Campaign</option>
-                      <option value="product">Product Shot</option>
-                      <option value="video">Video / Ad</option>
-                      <option value="collateral">Collateral</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-muted mb-1.5 block text-xs">Campaign / Collection</label>
-                    <input
-                      value={form.campaign}
-                      onChange={update('campaign')}
-                      placeholder="e.g. Spring 2026"
-                      className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-muted mb-1.5 block text-xs">Description <span className="text-muted/50">(optional)</span></label>
-                  <textarea
-                    value={form.description}
-                    onChange={update('description')}
-                    rows={3}
-                    placeholder="Any notes about this asset..."
-                    className="elevated w-full rounded-lg border border-subtle px-4 py-2.5 text-sm text-primary placeholder-muted outline-none focus:border-zinc-600 transition-colors resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-8 flex items-center justify-between">
-                <button onClick={() => setStep('files')} className="btn-inverted text-sm">Back</button>
-                <button
                   onClick={() => setStep('review')}
-                  disabled={!form.productName || !form.brand || !form.category}
+                  disabled={files.length === 0}
                   className="btn-primary text-sm disabled:opacity-40"
                 >
                   Continue — Review
@@ -283,7 +183,7 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-primary text-lg font-medium">Review & Register</h2>
-                  <p className="text-muted mt-0.5 text-sm">Confirm everything looks right.</p>
+                  <p className="text-muted mt-0.5 text-sm">Confirm and register your assets.</p>
                 </div>
                 <button onClick={reset} className="text-muted hover:text-primary transition-colors">
                   <X className="h-5 w-5" />
@@ -291,49 +191,26 @@ export default function UploadModal({ open, onClose, onUpload, folderId }: Uploa
               </div>
 
               <div className="elevated space-y-3 rounded-xl border border-subtle p-4 sm:p-5">
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { label: 'Product', value: form.productName },
-                    { label: 'Brand', value: form.brand },
-                    { label: 'Category', value: form.category },
-                    { label: 'Campaign', value: form.campaign || '—' },
-                  ].map((f) => (
-                    <div key={f.label}>
-                      <p className="text-muted text-xs">{f.label}</p>
-                      <p className="text-primary text-sm truncate mt-0.5">{f.value}</p>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <span className="text-xs text-emerald-500 font-medium">{files.length} file{files.length !== 1 ? 's' : ''} attached</span>
                 </div>
-                {form.description && (
-                  <div className="border-t border-subtle pt-3">
-                    <p className="text-muted text-xs">Description</p>
-                    <p className="text-primary text-sm mt-0.5">{form.description}</p>
-                  </div>
-                )}
-                {files.length > 0 && (
-                  <div className="border-t border-subtle pt-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-emerald-500" />
-                      <span className="text-xs text-emerald-500 font-medium">{files.length} file{files.length !== 1 ? 's' : ''} attached</span>
-                    </div>
-                    {files.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-muted pl-6">
-                        {f.type.startsWith('image') ? (
-                          <div className="h-6 w-6 shrink-0 overflow-hidden rounded bg-zinc-800">
-                            <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
-                          </div>
-                        ) : (
-                          <FileText className="h-4 w-4" />
-                        )}
-                        <span className="truncate">{stripExt(f.name)}</span>
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-muted">
+                    {f.type.startsWith('image') ? (
+                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded bg-zinc-800">
+                        <img src={URL.createObjectURL(f)} alt="" className="h-full w-full object-cover" />
                       </div>
-                    ))}
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    <span className="truncate">{stripExt(f.name)}</span>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="mt-8 flex items-center justify-between">
-                <button onClick={() => setStep('details')} className="btn-inverted text-sm">Back</button>
+                <button onClick={() => setStep('files')} className="btn-inverted text-sm">Back</button>
                 <button onClick={handleRegister} disabled={busy} className="btn-primary text-sm disabled:opacity-40">
                   {busy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
