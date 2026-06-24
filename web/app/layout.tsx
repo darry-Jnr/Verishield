@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans, GeistMono } from 'geist/font'
 import './globals.css'
 import QueryProvider from '@/components/query-provider'
+import ErrorBoundary from '@/components/error-boundary'
 
 const title = 'AuraGuard — Brand Protection Platform'
 const description = 'Register your product media, watermark it with invisible tracking IDs, and monitor for unauthorized use across the web.'
@@ -23,7 +24,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body><QueryProvider>{children}</QueryProvider></body>
+      <body><QueryProvider><ErrorBoundary>{children}</ErrorBoundary></QueryProvider></body>
     </html>
   )
 }

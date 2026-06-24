@@ -120,7 +120,9 @@ export default function DashboardPage() {
   const radarColor = stats.failed > 0 ? 'bg-red-500' : stats.processing > 0 ? 'bg-orange-500' : 'bg-emerald-500'
   const sweepColor = stats.failed > 0 ? 'from-red-500/40' : stats.processing > 0 ? 'from-orange-500/40' : 'from-emerald-500/40'
   const scanLabel = stats.failed > 0 ? 'Threats detected' : stats.processing > 0 ? 'Processing files' : 'All clear'
-  const lastScan = new Date().toLocaleTimeString()
+  const latestScanDate = scanResults.length > 0
+    ? new Date(scanResults[0].detected_at).toLocaleDateString()
+    : null
 
   const noAssets = folders.length === 0 && stats.total === 0
 
@@ -215,17 +217,17 @@ export default function DashboardPage() {
 
       <div className="mb-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'Total Folders', value: String(folders.length), icon: FolderKanban },
-          { label: 'Total Files', value: String(stats.total), icon: Image },
-          { label: 'Secured', value: String(stats.secured), icon: CheckCircle2, color: 'text-emerald-500' },
-          { label: 'Failed', value: String(stats.failed), icon: AlertTriangle, color: stats.failed > 0 ? 'text-red-500' : 'text-muted' },
+          { label: 'Total Folders', value: folders.length, icon: FolderKanban },
+          { label: 'Total Files', value: stats.total, icon: Image },
+          { label: 'Secured', value: stats.secured, icon: CheckCircle2, color: 'text-emerald-500' },
+          { label: 'Failed', value: stats.failed, icon: AlertTriangle, color: stats.failed > 0 ? 'text-red-500' : 'text-muted' },
         ].map((s) => (
           <div key={s.label} className="surface rounded-xl border border-subtle p-4 sm:p-5">
             <div className="flex items-center gap-2">
               <s.icon className={`h-4 w-4 ${s.color || 'text-muted'}`} />
               <p className="text-secondary text-xs">{s.label}</p>
             </div>
-            <p className="text-primary mt-1.5 text-xl sm:text-2xl font-medium">{s.value}</p>
+            <p className="text-primary mt-1.5 text-xl sm:text-2xl font-medium">{s.value > 0 ? String(s.value) : '—'}</p>
           </div>
         ))}
       </div>
@@ -260,7 +262,7 @@ export default function DashboardPage() {
               <p className="text-xs text-muted mt-1">
                 {scanMessage || (scanning
                   ? `Scanning registered domains for stolen assets`
-                  : `${scanLabel} · ${stats.total} files · Last scan ${lastScan}`
+                  : `${scanLabel} · ${stats.total} files · Last scan ${latestScanDate || 'Never'}`
                 )}
               </p>
             </div>
