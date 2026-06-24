@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Shield, X, Loader2, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -12,6 +13,7 @@ interface SignInProps {
 
 export default function SignIn({ open, onClose }: SignInProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   // const [email, setEmail] = useState('auraguard@gmail.com')
@@ -38,6 +40,7 @@ export default function SignIn({ open, onClose }: SignInProps) {
       return
     }
 
+    queryClient.clear()
     router.push('/dashboard')
   }
 

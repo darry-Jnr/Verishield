@@ -1,5 +1,11 @@
 import { supabase } from './supabase'
 
+async function getUserId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user?.id) throw new Error('Not authenticated')
+  return user.id
+}
+
 export interface Folder {
   id: number
   name: string
@@ -44,9 +50,11 @@ const fileThumbs: Record<string, string> = {
 }
 
 export async function getFolders() {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('folders')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -75,9 +83,11 @@ export async function createFolder(name: string, date: string, category?: string
 }
 
 export async function getFileStats() {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('files')
     .select('status')
+    .eq('user_id', userId)
 
   if (error) throw error
   const all = data as { status: string }[]
@@ -91,9 +101,11 @@ export async function getFileStats() {
 }
 
 export async function getRecentFiles(limit = 5) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('files')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -102,9 +114,11 @@ export async function getRecentFiles(limit = 5) {
 }
 
 export async function getFiles(folderId: number) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('files')
     .select('*')
+    .eq('user_id', userId)
     .eq('folder_id', folderId)
     .order('created_at', { ascending: true })
 
@@ -165,10 +179,12 @@ export async function uploadFiles(
 }
 
 export async function renameFile(fileId: number, newName: string) {
+  const userId = await getUserId()
   const { error } = await supabase
     .from('files')
     .update({ name: newName })
     .eq('id', fileId)
+    .eq('user_id', userId)
 
   if (error) throw error
 }
@@ -187,9 +203,11 @@ export interface ScanResult {
 }
 
 export async function getScanResults() {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('scan_results')
     .select('*')
+    .eq('user_id', userId)
     .order('detected_at', { ascending: false })
 
   if (error) throw error
@@ -197,10 +215,12 @@ export async function getScanResults() {
 }
 
 export async function getScanResultById(id: number) {
+  const userId = await getUserId()
   const { data, error } = await supabase
     .from('scan_results')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single()
 
   if (error) throw error
@@ -208,6 +228,8 @@ export async function getScanResultById(id: number) {
 }
 
 export async function deleteFile(file: FileRecord) {
+  const userId = await getUserId()
+
   const { error: storageError } = await supabase.storage
     .from('media')
     .remove([file.storage_path])
@@ -218,6 +240,7 @@ export async function deleteFile(file: FileRecord) {
     .from('files')
     .delete()
     .eq('id', file.id)
+    .eq('user_id', userId)
 
   if (dbError) throw dbError
 }

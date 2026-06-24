@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -15,17 +16,26 @@ const nav = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserEmail(data.user?.email ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUserEmail(null)
+        queryClient.clear()
+        router.push('/')
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        setUserEmail(session?.user?.email ?? null)
+      }
     })
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+    queryClient.clear()
     router.push('/')
   }
 
