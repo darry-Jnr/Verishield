@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { Shield, LayoutDashboard, FolderKanban, Bell, LogOut, Menu, X, MoreVertical } from 'lucide-react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { getScanResults } from '@/lib/db'
 import SystemStatus from '@/components/system-status'
 
 const nav = [
@@ -21,6 +22,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const { data: results } = useQuery({
+    queryKey: ['scan-results'],
+    queryFn: getScanResults,
+    refetchInterval: 30000,
+  })
+  const maxAlertId = results?.reduce((max, r) => Math.max(max, r.id), 0) ?? 0
+  const lastSeen = typeof window !== 'undefined' ? Number(localStorage.getItem('lastSeenAlertId') ?? 0) : 0
+  const hasUnread = maxAlertId > lastSeen
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -81,7 +91,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-secondary transition-colors hover:bg-elevated hover:text-primary"
             >
-              <item.icon className="h-4 w-4 shrink-0" />
+              <span className="relative">
+                <item.icon className="h-4 w-4 shrink-0" />
+                {item.label === 'Alerts' && hasUnread && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500" />
+                )}
+              </span>
               {item.label}
             </Link>
           ))}

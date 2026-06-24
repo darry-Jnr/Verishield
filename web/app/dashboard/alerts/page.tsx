@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExternalLink, Search, ChevronDown, ArrowUpDown } from 'lucide-react'
 import Link from 'next/link'
 import { getScanResults } from '@/lib/db'
@@ -19,6 +19,13 @@ export default function AlertsPage() {
     queryKey: ['scan-results'],
     queryFn: getScanResults,
   })
+
+  useEffect(() => {
+    if (results.length > 0) {
+      const maxId = Math.max(...results.map((r) => r.id))
+      localStorage.setItem('lastSeenAlertId', String(maxId))
+    }
+  }, [results])
 
   const sorted = sort === 'newest'
     ? results
